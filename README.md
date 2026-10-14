@@ -23,6 +23,10 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | `.github/workflows/publicar.yml` | Roda o `publicar.sh` a cada mudança em `src/` na branch `main`. |
 | `.clasp.json` | Liga a pasta `src/` ao projeto do Apps Script. |
 | `3d/vitrine.py` | Monta a vitrine no Blender por script e renderiza uma parada (veja [Vitrine 3D](#vitrine-3d)). |
+| `3d/produtos.py` | Veste os manequins com as roupas de cada parada e modela as malas e a garrafa. |
+| `3d/gerar_manequins.py` | Gera os manequins feminino e masculino a partir do MakeHuman (MPFB 2, CC0). |
+| `3d/modelos/` | Manequins prontos em `.glb`, com as regiões do corpo marcadas em cada vértice. |
+| `3d/renderizar_todas.sh` | Renderiza as 8 paradas e gera os recortes. |
 | `3d/recortes.py` | Recorta o render nos formatos de computador (16:9) e celular (9:16). |
 | `3d/baixar_texturas.sh` | Baixa as texturas de madeira (CC0, Poly Haven) para `3d/texturas/`, que fica fora do Git. |
 | `3d/fontes/` | Fonte Outfit do letreiro (licença SIL OFL em `OFL.txt`). |
@@ -84,11 +88,30 @@ A loja é montada inteira por código em `3d/vitrine.py`, com o Blender como mó
 - fachada com ripado de madeira e letreiro iluminado na fonte Outfit;
 - vidro contínuo com reflexos das luminárias do corredor;
 - piso de madeira, parede branca com o logo em relevo e fachos de luz dos spots;
-- 8 paradas na ordem da planilha: manequins abstratos (cinza ou preto, sem rosto, sobre base metálica) e cubos de madeira.
+- 8 paradas na ordem da planilha: manequins vestidos com os produtos e cubos de madeira com malas e garrafa.
 
-O manequim é gerado a partir de um esqueleto (modificadores Skin e Subdivision). As roupas justas são cópias da superfície do corpo afastadas alguns milímetros, o que funciona bem para peças esportivas de compressão. Na fase 2 só a parada 1 está vestida (casaco e bermuda de teste); os produtos de cada parada entram na fase 3.
+**Manequins.** `gerar_manequins.py` usa o corpo base do MakeHuman pelo add-on MPFB 2 (licença CC0, sem login): proporções de manequim de loja, braços relaxados e cabeça lisa em forma de ovo, sem rosto. Cada vértice guarda a região do corpo (`_REGIAO`: tronco, braço, coxa...) e a posição ao longo do osso (`_T`). Os `.glb` já gerados estão em `3d/modelos/`; para gerar de novo é preciso o zip do MPFB (<https://extensions.blender.org/add-ons/mpfb/>):
 
-A câmera fica do lado de fora, à altura do peito, sem inclinação (as verticais ficam retas), com o produto em 65% da largura. O render sai em 4:3 e é recortado em 16:9 para o computador e em 9:16, centrado no produto, para o celular.
+```sh
+.venv-blender/bin/python 3d/gerar_manequins.py --mpfb add-on-mpfb-v2.0.18.zip
+```
+
+**Produtos.** Em `produtos.py`, cada roupa é uma casca da superfície do manequim: escolhe as regiões que cobre, corta barra, punho e gola e se afasta do corpo alguns milímetros (ou mais, com gomos, na jaqueta acolchoada). Cores e detalhes seguem as fotos do site: os "pretos" da marca são um azul-marinho muito escuro, o shorts Laser é azul, o casaco tem zíper e gola alta, a camiseta ThermoDry tem o recorte em gota nas costas, a Sports tem logo e faixa refletivos. Malas e garrafa são modeladas por forma (matelassê em chevron da duffel, alças de mochila da Mala Trip, anel metálico e tampa com alça da garrafa).
+
+| Parada | Produto | Expositor |
+|---|---|---|
+| 1 | Casaco PowerCool, com bermuda de ciclista | Manequim feminino |
+| 2 | Mala Duffel Matelassê | Cubo |
+| 3 | Camiseta ThermoDry Gota, com legging | Manequim feminino |
+| 4 | Shorts Laser, com camiseta Sports | Manequim masculino |
+| 5 | Jaqueta Winter, com bermuda caqui | Manequim masculino |
+| 6 | Mala Trip | Cubo |
+| 7 | Camiseta Sports, com legging | Manequim masculino |
+| 8 | Garrafa Urban 950 ml | Cubo |
+
+Para trocar o produto de uma parada, mude `PARADAS` em `vitrine.py` e, se for um produto novo, crie a função dele em `produtos.py`.
+
+A câmera fica do lado de fora, sem inclinação (as verticais ficam retas), com o produto em 65% da largura. Nos manequins ela mostra o corpo inteiro; nos cubos usa uma lente mais longa, na altura do produto. O render sai em 4:3 e é recortado em 16:9 para o computador e em 9:16, centrado no produto, para o celular.
 
 ### Renderizar
 
@@ -98,6 +121,7 @@ sh 3d/baixar_texturas.sh
 .venv-blender/bin/python 3d/vitrine.py --parada 0 --previa                    # 480x360, ~20 s
 .venv-blender/bin/python 3d/vitrine.py --parada 0 --amostras 160              # 1600x1200, ~15 min em CPU de 4 núcleos
 .venv-blender/bin/python 3d/recortes.py 3d/renders/parada-0.png
+sh 3d/renderizar_todas.sh 96                                                  # as 8 paradas, ~12 min cada
 ```
 
 Opções de `vitrine.py`: `--parada` (0 a 7), `--largura`, `--altura`, `--amostras`, `--previa`, `--saida` e `--blend` (salva o arquivo `.blend` para abrir no Blender).
@@ -107,9 +131,16 @@ Opções de `vitrine.py`: `--parada` (0 a 7), `--largura`, `--altura`, `--amostr
 | Fase | Conteúdo | Situação |
 |---|---|---|
 | 1 | Planilha, Apps Script e vitrine com fotos do site | Concluída |
-| 2 | Cenário da loja no Blender e render de teste de uma parada | Render da parada 1 aguardando aprovação |
-| 3 | Produtos em 3D, renders finais e transições em vídeo | A fazer |
+| 2 | Cenário da loja no Blender e render de teste de uma parada | Cenário aprovado |
+| 3 (parte) | Manequins realistas e produtos de todas as paradas | Renders aguardando aprovação |
+| 3 | Renders na página, transições em vídeo entre as paradas | A fazer |
 | 4 | Acabamento, testes em celular e computador | A fazer |
+
+## Créditos
+
+- Corpo dos manequins: MakeHuman, pelo add-on MPFB 2 (CC0).
+- Texturas de madeira: Poly Haven (CC0).
+- Fonte Outfit: The Outfit Project Authors (SIL Open Font License 1.1, em `3d/fontes/OFL.txt`).
 
 ## Cuidados
 
