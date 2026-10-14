@@ -1,0 +1,14 @@
+{
+  "name": "hub-trackfield",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hub de links da equipe Track&Field com o tema da vitrine da loja, publicado no Google Apps Script.",
+  "scripts": {
+    "status": "clasp show-file-status",
+    "enviar": "clasp push -f",
+    "publicar": "sh scripts/publicar.sh"
+  },
+  "devDependencies": {
+    "@google/clasp": "3.4.1"
+  }
+}
