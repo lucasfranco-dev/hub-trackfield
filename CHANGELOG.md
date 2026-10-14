@@ -9,6 +9,7 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 - Produtos de todas as paradas (`3d/produtos.py`): casaco PowerCool, camiseta ThermoDry Gota, shorts Laser, jaqueta Winter acolchoada e camiseta Sports nos manequins; Mala Duffel Matelassê, Mala Trip e garrafa Urban nos cubos.
 - Câmera por parada: corpo inteiro nos manequins, lente mais longa na altura do produto nos cubos.
 - `3d/renderizar_todas.sh` renderiza as 8 paradas e gera os recortes.
+- Renders das 8 paradas em 1600x1200, com recortes `.webp` para computador e celular, e folha de prévia em `docs/previa/vitrine-3d-paradas.jpg`.
 - Fase 2: vitrine 3D montada por script no Blender (`3d/vitrine.py`), com fachada, ripado, letreiro, vidro, piso de madeira, parede com logo em relevo, spots e 8 paradas entre manequins e cubos.
 - Render de teste da parada 1 e recortes para computador e celular (`3d/recortes.py`).
 

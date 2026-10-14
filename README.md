@@ -90,6 +90,8 @@ A loja é montada inteira por código em `3d/vitrine.py`, com o Blender como mó
 - piso de madeira, parede branca com o logo em relevo e fachos de luz dos spots;
 - 8 paradas na ordem da planilha: manequins vestidos com os produtos e cubos de madeira com malas e garrafa.
 
+![As 8 paradas da vitrine 3D](docs/previa/vitrine-3d-paradas.jpg)
+
 **Manequins.** `gerar_manequins.py` usa o corpo base do MakeHuman pelo add-on MPFB 2 (licença CC0, sem login): proporções de manequim de loja, braços relaxados e cabeça lisa em forma de ovo, sem rosto. Cada vértice guarda a região do corpo (`_REGIAO`: tronco, braço, coxa...) e a posição ao longo do osso (`_T`). Os `.glb` já gerados estão em `3d/modelos/`; para gerar de novo é preciso o zip do MPFB (<https://extensions.blender.org/add-ons/mpfb/>):
 
 ```sh
