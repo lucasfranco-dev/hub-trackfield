@@ -10,7 +10,8 @@
 const ID_PLANILHA = '1eSkaq6dsmBnoYOXWYdMJFE7LAEQMngrRszZE_ed4OUE';
 const ABA_LINKS = 'Links';
 const CHAVE_CACHE = 'links-v1';
-const CACHE_SEGUNDOS = 300;
+// Edições na planilha aparecem no Hub em até 1 minuto.
+const CACHE_SEGUNDOS = 60;
 
 // Cabeçalhos aceitos (sem acento, minúsculos) para cada campo.
 const COLUNAS = {
@@ -41,7 +42,7 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }
 
-/** Gatilho simples: qualquer edição na planilha atualiza o Hub na próxima visita. */
+/** Só dispara se o script estiver vinculado à planilha: limpa o cache na hora. */
 function onEdit() {
   CacheService.getScriptCache().remove(CHAVE_CACHE);
 }

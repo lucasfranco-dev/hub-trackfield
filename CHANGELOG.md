@@ -6,9 +6,13 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 
 ### Adicionado
 - Repositório versionado, com o código do Apps Script em `src/`.
-- Envio para o Apps Script com o clasp (`npm run publicar`) e publicação automática pelo GitHub Actions a cada mudança em `src/` na `main`.
+- Envio para o Apps Script com o clasp (`npm run publicar`) e publicação automática pelo GitHub Actions a cada mudança em `src/` na `main`. Sem o segredo `CLASPRC_JSON`, o workflow avisa e não publica.
 - Manifesto `appsscript.json`, que publica o app da Web para qualquer pessoa, sem login.
+- Implantação do app da Web criada; o ID fica em `package.json` (`config.deploymentId`).
 - O `Code.gs` abre a planilha pelo ID quando o script não está vinculado a ela.
+
+### Alterado
+- Cache da lista de links reduzido de 5 minutos para 1 minuto, porque o script é independente e o gatilho de edição da planilha não dispara.
 
 ## [1.0.0] - 2026-10-14
 

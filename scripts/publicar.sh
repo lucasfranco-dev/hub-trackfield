@@ -2,17 +2,12 @@
 # Envia o código de src/ para o Apps Script e atualiza a implantação do app da Web,
 # mantendo a mesma URL. Usado localmente e pelo GitHub Actions.
 #
-# Precisa de:
-#   ~/.clasprc.json   credenciais do clasp (npx clasp login)
-#   DEPLOYMENT_ID     ID da implantação do app da Web (npx clasp deployments)
+# Precisa de ~/.clasprc.json (credenciais do clasp, criadas com `npx clasp login`).
+# O ID da implantação fica em package.json (config.deploymentId); a variável
+# DEPLOYMENT_ID, se definida, tem prioridade.
 set -eu
 
-if [ -z "${DEPLOYMENT_ID:-}" ]; then
-  echo "Defina DEPLOYMENT_ID com o ID da implantação do app da Web." >&2
-  echo "Para ver os IDs: npx clasp deployments" >&2
-  exit 1
-fi
-
+DEPLOYMENT_ID="${DEPLOYMENT_ID:-$(node -p "require('./package.json').config.deploymentId")}"
 DESCRICAO="${DESCRICAO:-$(git log -1 --format='%h %s' 2>/dev/null || date '+%Y-%m-%d %H:%M')}"
 
 npx clasp push -f

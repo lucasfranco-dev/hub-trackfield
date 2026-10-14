@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "@google/clasp": "3.4.1"
+  },
+  "config": {
+    "deploymentId": "AKfycbxawbOdgqsfsxDmw7Tn0IR1l_76XcU93D5uxSl2q78mPSBlMnPn5A2DqqE8l1pIAR0bbQ"
   }
 }

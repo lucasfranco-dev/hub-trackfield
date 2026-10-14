@@ -4,6 +4,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 
 | | |
 |---|---|
+| Hub (endereço da equipe) | <https://script.google.com/macros/s/AKfycbxawbOdgqsfsxDmw7Tn0IR1l_76XcU93D5uxSl2q78mPSBlMnPn5A2DqqE8l1pIAR0bbQ/exec> |
 | Planilha de links | [Hub Track&Field: links](https://docs.google.com/spreadsheets/d/1eSkaq6dsmBnoYOXWYdMJFE7LAEQMngrRszZE_ed4OUE/edit) |
 | Projeto no Apps Script | [abrir no editor](https://script.google.com/d/1g-Re2_3aVLnRRAj_56KY8RO1RIAdNUp-9NhAM2XxMt5NHkWEf-Kkn_2c/edit) |
 | Histórico de mudanças | [CHANGELOG.md](CHANGELOG.md) |
@@ -17,6 +18,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | `src/Code.gs` | Servidor: lê a aba **Links** da planilha e entrega a página. |
 | `src/Index.html` | A vitrine: visual, animações e navegação, num único arquivo. |
 | `src/appsscript.json` | Manifesto do Apps Script: fuso horário e acesso do app da Web (qualquer pessoa, sem login). |
+| `package.json` | Dependência do clasp e, em `config.deploymentId`, o ID da implantação do app da Web. |
 | `scripts/publicar.sh` | Envia `src/` para o Apps Script e atualiza a implantação. |
 | `.github/workflows/publicar.yml` | Roda o `publicar.sh` a cada mudança em `src/` na branch `main`. |
 | `.clasp.json` | Liga a pasta `src/` ao projeto do Apps Script. |
@@ -24,7 +26,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 
 ## Editar os links
 
-Os links ficam na planilha, não no código. A página reflete a mudança na próxima visita.
+Os links ficam na planilha, não no código. A mudança aparece no Hub em até 1 minuto (o script guarda a lista em cache por esse tempo).
 
 | Coluna | Uso |
 |---|---|
@@ -55,19 +57,20 @@ O código publicado é sempre o que está na `main`.
 **Manual**, de um computador com as credenciais do clasp:
 
 ```sh
-DEPLOYMENT_ID=<id da implantação> npm run publicar
+npm run publicar
 ```
+
+O script envia `src/` com `clasp push` e atualiza a implantação cujo ID está em `package.json` (`config.deploymentId`). Nunca crie uma implantação nova: a URL da equipe mudaria.
 
 ### Configuração inicial (uma vez)
 
 1. Ative a **API do Google Apps Script** em <https://script.google.com/home/usersettings>.
-2. No terminal, rode `npx clasp login` e autorize com a conta dona do script. Isso cria o arquivo `~/.clasprc.json`.
-3. Rode `npx clasp deployments` e copie o ID da implantação do app da Web (o que não é `@HEAD`).
-4. No GitHub, em **Settings → Secrets and variables → Actions**:
-   - Aba **Secrets**: crie `CLASPRC_JSON` com o conteúdo inteiro do `~/.clasprc.json`.
-   - Aba **Variables**: crie `DEPLOYMENT_ID` com o ID do passo 3.
+2. **Autorize o script:** abra a URL do Hub logado com a conta dona do script e aceite as permissões. Sem isso, quem não tem login vê "acesso negado".
+3. **Credenciais para o GitHub Actions:** no seu computador, rode `npx @google/clasp login` e autorize com a conta dona do script. Isso cria o arquivo `~/.clasprc.json`. No GitHub, em **Settings → Secrets and variables → Actions → New repository secret**, crie `CLASPRC_JSON` com o conteúdo inteiro desse arquivo.
 
-O `~/.clasprc.json` dá acesso aos seus scripts do Google. Ele nunca entra no repositório (está no `.gitignore`) e não deve ser colado em conversas ou issues.
+Sem o segredo, o workflow termina com um aviso e não publica. O `~/.clasprc.json` dá acesso aos seus scripts do Google: ele nunca entra no repositório (está no `.gitignore`) e não deve ser colado em conversas ou issues.
+
+O script do Apps Script é independente, não vinculado à planilha. Ele abre a planilha pelo ID que está em `src/Code.gs` (`ID_PLANILHA`).
 
 ## Roteiro
 
