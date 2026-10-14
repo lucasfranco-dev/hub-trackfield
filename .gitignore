@@ -1,3 +1,6 @@
 node_modules/
 .clasprc.json
 .DS_Store
+3d/texturas/
+*.blend
+*.blend1
