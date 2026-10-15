@@ -5,6 +5,8 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 ## [Não publicado]
 
 ### Adicionado
+- Telas mais largas que a vitrine: as laterais deixam de ser cinza e continuam a cena com o próprio render, espelhado e desfocado, com as bordas da vitrine se dissolvendo nele (também durante as transições).
+- O nome do link fica num adesivo jateado, uma placa fosca no vidro, para não se misturar com o manequim vizinho. No celular a placa envolve só o texto, mais compacta, para não cobrir a cabeça do manequim.
 - `3d/renderizar_maxima.sh`: toda a vitrine em qualidade máxima na placa de vídeo (paradas em 2400x1800 com 512 amostras, transições em 1600x1200 com 128 amostras e desfoque de movimento).
 - `3d/verificar.sh`: confere Python, Pillow, ffmpeg, texturas e placa de vídeo antes de renderizar.
 - `docs/render-no-pc.md`: o que instalar no PC e o pedido pronto para o Claude local renderizar e publicar.

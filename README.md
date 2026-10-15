@@ -116,7 +116,7 @@ A loja é montada inteira por código em `3d/vitrine.py`, com o Blender como mó
 
 Para trocar o produto de uma parada, mude `PARADAS` em `vitrine.py` e, se for um produto novo, crie a função dele em `produtos.py`.
 
-A câmera fica do lado de fora, sem inclinação (as verticais ficam retas), com o produto em 65% da largura. Nos manequins ela mostra o corpo inteiro; nos cubos usa uma lente mais longa, na altura do produto. O render sai em 4:3; a página recorta para a tela (no computador a vitrine é no máximo 1,8 vez mais larga que alta, para não cortar cabeças; no celular o recorte é vertical, centrado no produto).
+A câmera fica do lado de fora, sem inclinação (as verticais ficam retas), com o produto em 65% da largura. Nos manequins ela mostra o corpo inteiro; nos cubos usa uma lente mais longa, na altura do produto. O render sai em 4:3; a página recorta para a tela (no computador a vitrine é no máximo 1,8 vez mais larga que alta, para não cortar cabeças; no celular o recorte é vertical, centrado no produto). Em telas mais largas que isso, as laterais continuam a cena com o próprio render, espelhado e desfocado como a profundidade de campo de uma lente, e as bordas da vitrine se dissolvem nele; o rodapé da parede e o piso ficam na mesma linha. O nome do link fica num adesivo jateado (placa fosca no vidro), legível mesmo com um manequim vizinho atrás.
 
 **Transições.** Para cada par de paradas vizinhas, `vitrine.py --transicao` anima a câmera de uma até a outra (aceleração e frenagem suaves; a lente muda pelo ângulo de visão). São 23 quadros em 960x720 a 24 quadros por segundo: 1 segundo de travelling. Cada transição tem o vídeo de ida e o de volta (o mesmo, invertido), em MP4 (H.264) e WebM (VP9); a página escolhe o formato que o navegador toca.
 

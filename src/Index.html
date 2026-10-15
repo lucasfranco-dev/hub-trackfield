@@ -22,7 +22,10 @@
       --fonte: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
       --saida: cubic-bezier(.23, 1, .32, 1);
       /* Enquadramento dos renders 4:3: produto a 65% da largura. */
-      --foco: 65% 45%;
+      --foco-y: 45%;
+      --foco: 65% var(--foco-y);
+      /* Proporção máxima da vitrine no computador (largura / altura). */
+      --proporcao: 1.8;
     }
 
     * { box-sizing: border-box; }
@@ -87,25 +90,88 @@
     /* Moldura cinza: a vitrine fica centralizada e no máximo 1,8x mais larga que alta,
        para os renders 4:3 não perderem a cabeça dos manequins em telas largas. */
     .moldura {
+      position: relative;
       min-height: 0;
       display: flex;
       justify-content: center;
+      overflow: hidden;
       padding: 10px clamp(8px, 2.2vw, 30px) 0;
       background: linear-gradient(180deg, var(--moldura-escura), var(--moldura) 30px);
     }
 
     .vitrine {
       position: relative;
+      z-index: 1;
       height: 100%;
       width: auto;
+      min-width: 0;
       max-width: 100%;
-      aspect-ratio: 1.8;
+      aspect-ratio: var(--proporcao);
       overflow: hidden;
       background: var(--parede);
       touch-action: pan-y;
       user-select: none;
       -webkit-user-select: none;
       box-shadow: inset 0 0 0 1px rgb(0 0 0 / .06);
+    }
+
+    /* Telas mais largas que a vitrine: as laterais continuam a cena com o próprio render,
+       espelhado e desfocado (como a profundidade de campo de uma lente), e as bordas da
+       vitrine se dissolvem nele. A faixa tem três cópias lado a lado (espelho, render,
+       espelho), na mesma escala e altura da vitrine, então a emenda é contínua e o rodapé
+       da parede fica na mesma linha. A classe .larga é posta pelo script. */
+    .ambiente {
+      display: none;
+      position: absolute;
+      inset: 10px 0 0;  /* mesma faixa vertical da vitrine (padding de .moldura) */
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .larga .ambiente { display: block; }
+    .faixa {
+      position: absolute;
+      left: 50%;
+      /* O render 4:3 ocupa a largura da vitrine (proporção x altura), então tem
+         proporção x 3/4 da altura dela, deslocado como no object-position (--foco-y).
+         Assim sobra imagem de verdade acima e abaixo para o desfoque não clarear as bordas. */
+      top: calc((1 - var(--proporcao) * .75) * var(--foco-y));
+      height: calc(var(--proporcao) * 75%);
+      display: flex;
+      transform: translateX(-50%);
+      filter: blur(16px) saturate(.92);
+      opacity: 0;
+      transition: opacity .9s ease;
+      will-change: opacity;
+    }
+    .faixa.visivel { opacity: 1; }
+    .faixa.topo { z-index: 1; }
+    .faixa img {
+      flex: none;
+      height: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+    .faixa img:not(:nth-child(2)) { transform: scaleX(-1); }
+    /* Vinheta nas pontas e a loja "apagada" até a primeira imagem chegar. */
+    .ambiente::before, .ambiente::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+    .ambiente::before {
+      background: linear-gradient(90deg, rgb(52 44 36 / .3), rgb(52 44 36 / 0) 22%,
+                                         rgb(52 44 36 / 0) 78%, rgb(52 44 36 / .3));
+    }
+    .ambiente::after {
+      background: rgb(28 22 17 / .62);
+      transition: opacity .8s ease .25s;
+    }
+    .acesa .ambiente::after { opacity: 0; }
+    .larga .vitrine { background: transparent; box-shadow: none; }
+    .larga .quadro, .larga .travelling {
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
     }
 
     .quadro, .travelling {
@@ -141,30 +207,51 @@
     }
     .alvo-produto:focus-visible { outline: 2px solid var(--noturno); outline-offset: -6px; }
 
-    /* Adesivo no vidro com o nome do link. */
+    /* Adesivo jateado no vidro com o nome do link: o fundo fosco mantém o texto legível
+       mesmo com um manequim vizinho atrás dele. */
     .adesivo {
       position: absolute;
       z-index: 4;
-      left: 7%;
+      left: 4.5%;
       top: 50%;
-      width: 40%;
+      width: 42%;
       transform: translateY(-50%);
       pointer-events: none;
     }
-    .adesivo > * {
+    .placa {
+      width: fit-content;
+      max-width: 100%;
+      padding: clamp(20px, 2.1vw, 30px) clamp(22px, 2.4vw, 34px);
+      border-radius: 22px;
+      background: rgb(250 248 244 / .56);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      backdrop-filter: blur(18px) saturate(1.2);
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / .6), 0 20px 44px -28px rgb(31 39 64 / .45);
+    }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .placa { background: rgb(250 248 244 / .9); }
+    }
+    .adesivo .placa, .adesivo .texto > * {
       opacity: 0;
       transform: translateY(8px);
       transition: opacity .2s ease, transform .2s ease;
     }
-    .adesivo.visivel > * {
+    .adesivo.visivel .placa, .adesivo.visivel .texto > * {
       opacity: 1;
       transform: none;
       transition: opacity .45s var(--saida), transform .45s var(--saida);
     }
-    .adesivo.visivel > :nth-child(2) { transition-delay: 40ms; }
-    .adesivo.visivel > :nth-child(3) { transition-delay: 80ms; }
-    .adesivo.visivel > :nth-child(4) { transition-delay: 120ms; }
-    .adesivo.visivel .abrir { pointer-events: auto; }
+    .adesivo.visivel .texto > :nth-child(2) { transition-delay: 40ms; }
+    .adesivo.visivel .texto > :nth-child(3) { transition-delay: 80ms; }
+    .adesivo .abrir {
+      opacity: 0;
+      transition: opacity .2s ease, background-color .2s ease, transform .15s ease;
+    }
+    .adesivo.visivel .abrir {
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity .45s var(--saida) 120ms, background-color .2s ease, transform .15s ease;
+    }
     .categoria {
       margin: 0 0 10px;
       font-size: 15px;
@@ -331,22 +418,44 @@
       .soleira { padding-inline: 8px; }
       .vitrine { width: 100%; aspect-ratio: auto; }
       .adesivo {
-        inset: 4% 7% 4% 7%;
+        inset: 3% 5% 4% 5%;
         width: auto;
         transform: none;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
       }
+      /* No celular a placa fosca envolve só o texto; o botão fica embaixo, sozinho. */
+      .placa { display: contents; }
+      .texto {
+        max-width: 100%;
+        padding: 11px 16px 13px;
+        border-radius: 16px;
+        background: rgb(250 248 244 / .56);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        backdrop-filter: blur(16px) saturate(1.2);
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / .6), 0 16px 36px -26px rgb(31 39 64 / .45);
+      }
+      .adesivo .texto {
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity .2s ease, transform .2s ease;
+      }
+      .adesivo.visivel .texto {
+        opacity: 1;
+        transform: none;
+        transition: opacity .45s var(--saida), transform .45s var(--saida);
+      }
       .nome { font-size: clamp(28px, 8.4vw, 38px); }
-      .categoria { margin-bottom: 6px; font-size: 14px; }
-      .descricao { margin: 8px 0 0; font-size: 15px; }
+      .categoria { margin-bottom: 4px; font-size: 14px; }
+      .descricao { margin: 5px 0 0; font-size: 15px; }
       .abrir { margin-top: auto; align-self: stretch; justify-content: center; min-height: 52px; }
       .alvo-produto { left: 20%; width: 60%; top: 22%; bottom: 16%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .letreiro, .apagado, .quadro, .adesivo > *, .abrir, .indice button::after { transition: none !important; }
+      .letreiro, .apagado, .quadro, .faixa, .ambiente::after, .placa, .texto, .texto > *, .abrir,
+      .indice button::after { transition: none !important; }
     }
   </style>
 </head>
@@ -359,7 +468,11 @@
       <p class="letreiro" aria-hidden="true">Track&amp;Field</p>
     </header>
 
-    <div class="moldura">
+    <div class="moldura" id="moldura">
+      <div class="ambiente" aria-hidden="true">
+        <div class="faixa"><img alt="" decoding="async"><img alt="" decoding="async"><img alt="" decoding="async"></div>
+        <div class="faixa"><img alt="" decoding="async"><img alt="" decoding="async"><img alt="" decoding="async"></div>
+      </div>
       <main class="vitrine" id="vitrine" aria-roledescription="carrossel" aria-label="Links da equipe">
         <img class="quadro fundo" id="quadroA" alt="" draggable="false" decoding="async">
         <img class="quadro frente saindo" id="quadroB" alt="" draggable="false" decoding="async">
@@ -414,6 +527,9 @@
     var btnAnterior = $('anterior'), btnProxima = $('proxima');
     var quadros = [$('quadroA'), $('quadroB')];
     var frente = 0;  // índice em `quadros` da imagem visível
+    var moldura = $('moldura');
+    var faixas = moldura.querySelectorAll('.faixa');
+    var faixaFrente = 0;  // índice em `faixas` da camada visível das laterais
 
     var reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var dados = lerDados();
@@ -474,6 +590,10 @@
 
       quadros[0].src = srcQuadro(paradas[0]);
       quadros[0].setAttribute('fetchpriority', 'high');
+      trocarAmbiente(srcQuadro(paradas[0]));
+      medirLaterais();
+      if (window.ResizeObserver) new ResizeObserver(medirLaterais).observe(moldura);
+      else window.addEventListener('resize', medirLaterais);
       preencherAdesivo(0);
       marcar(0, true);
       adesivo.classList.add('visivel');
@@ -498,9 +618,13 @@
       var url = urlSegura(link.url);
       adesivo.textContent = '';
       adesivo.setAttribute('aria-label', (i + 1) + ' de ' + links.length);
-      if (link.categoria) adesivo.appendChild(el('p', 'categoria', link.categoria));
-      adesivo.appendChild(el('h2', 'nome', link.nome));
-      if (link.descricao) adesivo.appendChild(el('p', 'descricao', link.descricao));
+      var placa = el('div', 'placa');
+      var texto = el('div', 'texto');
+      if (link.categoria) texto.appendChild(el('p', 'categoria', link.categoria));
+      texto.appendChild(el('h2', 'nome', link.nome));
+      if (link.descricao) texto.appendChild(el('p', 'descricao', link.descricao));
+      placa.appendChild(texto);
+      adesivo.appendChild(placa);
       if (url) {
         var abrir = el('a', 'abrir');
         abrir.href = url;
@@ -509,7 +633,7 @@
         abrir.textContent = 'Abrir';
         abrir.insertAdjacentHTML('beforeend', ICONE_ABRIR);
         abrir.setAttribute('aria-label', 'Abrir ' + link.nome + ' em nova aba');
-        adesivo.appendChild(abrir);
+        placa.appendChild(abrir);
         alvo.href = url;
       } else {
         alvo.removeAttribute('href');
@@ -599,6 +723,31 @@
       });
     }
 
+    // Laterais (telas mais largas que a vitrine): troca a cena espelhada e desfocada
+    // com fade, a nova camada por cima da antiga, para não aparecer o fundo no meio.
+    function trocarAmbiente(src) {
+      var nova = faixas[1 - faixaFrente], antiga = faixas[faixaFrente];
+      faixaFrente = 1 - faixaFrente;
+      var imgs = nova.querySelectorAll('img');
+      return Promise.all(Array.prototype.map.call(imgs, function (img) {
+        return carregarImagem(img, src);
+      })).then(function () {
+        if (nova !== faixas[faixaFrente]) return;  // já houve outra troca depois desta
+        antiga.classList.remove('topo');
+        nova.classList.add('topo', 'visivel');
+        setTimeout(function () {
+          if (antiga !== faixas[faixaFrente]) antiga.classList.remove('visivel');
+        }, 950);
+      });
+    }
+
+    // Liga as laterais só quando sobra espaço ao lado da vitrine (além do padding).
+    function medirLaterais() {
+      var estilo = getComputedStyle(moldura);
+      var livre = moldura.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight);
+      moldura.classList.toggle('larga', livre - vitrine.offsetWidth > 2);
+    }
+
     // ------------------------------------------------------------ navegação
 
     function irPara(i) {
@@ -612,6 +761,7 @@
       adesivo.classList.remove('visivel');
 
       var destino = srcQuadro(paradas[i]);
+      trocarAmbiente(destino);
       var video = reduzido ? null : obterVideo(srcVideo(paradas[de], paradas[i]));
       var passo = video ? videoPronto(video, 450).then(function (pronto) {
         return pronto ? tocarTravelling(video, destino) : trocarQuadro(destino);
