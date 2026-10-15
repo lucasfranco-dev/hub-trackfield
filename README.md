@@ -158,11 +158,11 @@ Não rode o mesmo render em dois computadores ao mesmo tempo: combine antes qual
 
 ### Mídias da página
 
-A página carrega as imagens e os vídeos de `midia/` pelo jsDelivr, a partir de uma tag fixa do repositório (por isso o repositório é público): `https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@midia-v1/midia/`. Uma tag nunca muda, então o cache da CDN não atrapalha. Para trocar as mídias:
+A página carrega as imagens e os vídeos de `midia/` pelo jsDelivr, a partir de um commit fixo do repositório (por isso o repositório é público): `https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@<hash do commit>/midia/`. O conteúdo de um commit nunca muda, então o cache da CDN não atrapalha. Para trocar as mídias:
 
-1. Gere os arquivos novos em `midia/` e faça o commit.
-2. Crie a próxima tag (`git tag midia-v2 && git push origin midia-v2`).
-3. Troque `midia-v1` por `midia-v2` na constante `MIDIA` de `src/Index.html` e publique.
+1. Gere os arquivos novos em `midia/`, faça o commit e o push.
+2. Copie o hash completo desse commit (`git rev-parse HEAD`).
+3. Troque o hash na constante `MIDIA` de `src/Index.html`, faça o commit e publique.
 
 | Arquivo | Uso |
 |---|---|

@@ -387,9 +387,10 @@
   (function () {
     'use strict';
 
-    // Imagens e vídeos da vitrine 3D, servidos pela CDN do jsDelivr a partir da tag
-    // do repositório. Ao trocar as mídias, crie uma tag nova e atualize aqui.
-    var MIDIA = 'https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@midia-v1/midia/';
+    // Imagens e vídeos da vitrine 3D, servidos pela CDN do jsDelivr a partir de um commit
+    // fixo do repositório (não muda, então o cache nunca fica velho). Ao trocar as mídias,
+    // faça o commit delas e ponha aqui o hash desse commit.
+    var MIDIA = 'https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@0b9c781ef83f0f2c85ad71b85861ecb0a4150e23/midia/';
 
     // Paradas da vitrine 3D, na ordem em que a câmera passa (3d/vitrine.py).
     var VITRINE = ['Casaco PowerCool', 'Mala Duffel Matelassê', 'Camiseta ThermoDry', 'Shorts Laser',
