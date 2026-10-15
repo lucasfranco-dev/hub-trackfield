@@ -6,7 +6,7 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 
 ### Adicionado
 - Fase 3: a página mostra os renders 3D da vitrine no lugar das fotos, com travelling em vídeo entre produtos vizinhos (ida e volta) e fade nos saltos maiores ou com "reduzir movimento".
-- `vitrine.py --transicao` e `3d/renderizar_transicoes.sh`: travelling de câmera entre paradas, 12 quadros interpolados para 24 quadros/s pelo ffmpeg.
+- `vitrine.py --transicao` e `3d/renderizar_transicoes.sh`: travelling de câmera entre paradas, 23 quadros renderizados a 24 quadros/s (`--so-pares` completa uma transição já feita com 12 quadros). Vídeos em MP4 (H.264) e WebM (VP9); a página usa o formato que o navegador toca.
 - Pasta `midia/` com as imagens WebP das paradas e os vídeos das transições, servida pelo jsDelivr a partir da tag `midia-v1`; `3d/exportar_midia.py` gera as imagens.
 - A vitrine no computador fica no máximo 1,8 vez mais larga que alta, para os renders não cortarem a cabeça dos manequins em telas largas.
 - Manequins feminino e masculino realistas gerados do MakeHuman (MPFB 2, CC0), com braços relaxados e cabeça lisa sem rosto (`3d/gerar_manequins.py`, `3d/modelos/`).

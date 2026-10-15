@@ -115,7 +115,7 @@ Para trocar o produto de uma parada, mude `PARADAS` em `vitrine.py` e, se for um
 
 A câmera fica do lado de fora, sem inclinação (as verticais ficam retas), com o produto em 65% da largura. Nos manequins ela mostra o corpo inteiro; nos cubos usa uma lente mais longa, na altura do produto. O render sai em 4:3; a página recorta para a tela (no computador a vitrine é no máximo 1,8 vez mais larga que alta, para não cortar cabeças; no celular o recorte é vertical, centrado no produto).
 
-**Transições.** Para cada par de paradas vizinhas, `vitrine.py --transicao` anima a câmera de uma até a outra (aceleração e frenagem suaves; a lente muda pelo ângulo de visão). São 12 quadros em 960x720, interpolados para 24 quadros por segundo pelo ffmpeg: 1 segundo de travelling. Cada transição tem o vídeo de ida e o de volta (o mesmo, invertido).
+**Transições.** Para cada par de paradas vizinhas, `vitrine.py --transicao` anima a câmera de uma até a outra (aceleração e frenagem suaves; a lente muda pelo ângulo de visão). São 23 quadros em 960x720 a 24 quadros por segundo: 1 segundo de travelling. Cada transição tem o vídeo de ida e o de volta (o mesmo, invertido), em MP4 (H.264) e WebM (VP9); a página escolhe o formato que o navegador toca.
 
 ### Renderizar
 
@@ -125,7 +125,7 @@ sh 3d/baixar_texturas.sh
 .venv-blender/bin/python 3d/vitrine.py --parada 0 --previa                    # 480x360, ~20 s
 .venv-blender/bin/python 3d/vitrine.py --parada 0 --amostras 160              # 1600x1200, ~15 min em CPU de 4 núcleos
 sh 3d/renderizar_todas.sh 96          # as 8 paradas (~12 min cada) e as imagens de midia/paradas/
-sh 3d/renderizar_transicoes.sh        # as 7 transições (~10 min cada) e os vídeos de midia/transicoes/
+sh 3d/renderizar_transicoes.sh        # as 7 transições (~12 min cada) e os vídeos de midia/transicoes/
 ```
 
 ### Mídias da página
@@ -139,8 +139,8 @@ A página carrega as imagens e os vídeos de `midia/` pelo jsDelivr, a partir de
 | Arquivo | Uso |
 |---|---|
 | `midia/paradas/parada-N.webp` | Imagem da parada N (0 a 7), 1600x1200, 20 a 35 KB |
-| `midia/transicoes/transicao-N-ida.mp4` | Travelling da parada N até a N+1 |
-| `midia/transicoes/transicao-N-volta.mp4` | O mesmo, de volta |
+| `midia/transicoes/transicao-N-ida.mp4` / `.webm` | Travelling da parada N até a N+1 |
+| `midia/transicoes/transicao-N-volta.mp4` / `.webm` | O mesmo, de volta |
 
 Opções de `vitrine.py`: `--parada` (0 a 7), `--largura`, `--altura`, `--amostras`, `--previa`, `--saida` e `--blend` (salva o arquivo `.blend` para abrir no Blender).
 

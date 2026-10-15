@@ -482,6 +482,9 @@ def main():
                         "--saida vira a pasta dos quadros")
     p.add_argument("--quadros", type=int, default=24, help="Quadros da transição (24 por segundo)")
     p.add_argument("--apenas-quadro", type=int, help="Renderiza só este quadro da transição (para testar)")
+    p.add_argument("--so-pares", action="store_true",
+                   help="Renderiza só os quadros pares da transição (2, 4, ...). Com --quadros 23, completa "
+                        "uma transição já feita com 12 quadros, que correspondem aos ímpares")
     a = p.parse_args(argv)
     if a.previa:
         a.largura, a.altura, a.amostras = 480, 360, 24
@@ -505,6 +508,9 @@ def main():
     if a.transicao and a.apenas_quadro:
         cena = bpy.context.scene
         cena.frame_start = cena.frame_end = a.apenas_quadro
+    elif a.transicao and a.so_pares:
+        cena = bpy.context.scene
+        cena.frame_start, cena.frame_end, cena.frame_step = 2, a.quadros - 1, 2
     if a.transicao:
         bpy.ops.render.render(animation=True)
         print("Quadros salvos em", saida)

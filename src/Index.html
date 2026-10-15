@@ -440,9 +440,11 @@
 
     function urlSegura(url) { return /^https?:\/\//i.test(String(url || '')) ? url : null; }
     function srcQuadro(p) { return MIDIA + 'paradas/parada-' + p + '.webp'; }
+    // MP4 (H.264) onde o navegador toca; senão WebM (VP9).
+    var EXTENSAO_VIDEO = document.createElement('video').canPlayType('video/mp4; codecs="avc1.64001F"') ? '.mp4' : '.webm';
     function srcVideo(de, para) {
-      return para === de + 1 ? MIDIA + 'transicoes/transicao-' + de + '-ida.mp4'
-           : para === de - 1 ? MIDIA + 'transicoes/transicao-' + para + '-volta.mp4' : null;
+      return para === de + 1 ? MIDIA + 'transicoes/transicao-' + de + '-ida' + EXTENSAO_VIDEO
+           : para === de - 1 ? MIDIA + 'transicoes/transicao-' + para + '-volta' + EXTENSAO_VIDEO : null;
     }
 
     function el(tag, classe, texto) {
