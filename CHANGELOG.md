@@ -13,6 +13,7 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 - Os scripts de render acham o Python do venv também no Windows (`3d/ambiente.sh`) e aceitam tamanho, amostras e desfoque por variáveis (`LARGURA`, `ALTURA`, `AMOSTRAS`, `DESFOQUE`).
 - `exportar_midia.py` limita as imagens da página a 1920 px de largura.
 - O logo em relevo da parede foi desligado (`LOGO_EM_RELEVO` em `vitrine.py`): ficava atrás do nome do link. Vale a partir do próximo render.
+- Mídias da página refeitas em qualidade máxima na placa de vídeo (RTX 3060 com OptiX, 145 min, já sem o logo em relevo): paradas em 2400x1800 com 512 amostras (imagens de 1920x1440 na página) e transições em 1600x1200 com 128 amostras e desfoque de movimento. `MIDIA` em `src/Index.html` aponta para o commit dessas mídias; README e folha de prévia (`docs/previa/vitrine-3d-paradas.jpg`) atualizados.
 
 ## [2.0.0] - 2026-10-15
 

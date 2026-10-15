@@ -34,7 +34,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | `3d/renderizar_transicoes.sh` | Renderiza o travelling de câmera entre paradas vizinhas e gera os vídeos (`midia/transicoes/`). |
 | `3d/baixar_texturas.sh` | Baixa as texturas de madeira (CC0, Poly Haven) para `3d/texturas/`, que fica fora do Git. |
 | `3d/fontes/` | Fonte Outfit do letreiro (licença SIL OFL em `OFL.txt`). |
-| `3d/renders/` | Renders originais das paradas (PNG 1600x1200). |
+| `3d/renders/` | Renders originais das paradas (PNG 2400x1800, feitos com `3d/renderizar_maxima.sh`). |
 | `midia/` | Imagens e vídeos que a página carrega, servidos pelo jsDelivr (veja [Mídias da página](#mídias-da-página)). |
 | `docs/` | Conceito visual (`conceito/storyboard.html`) e prévias da página. |
 
@@ -177,8 +177,8 @@ A página carrega as imagens e os vídeos de `midia/` pelo jsDelivr, a partir de
 
 | Arquivo | Uso |
 |---|---|
-| `midia/paradas/parada-N.webp` | Imagem da parada N (0 a 7), 1600x1200, 20 a 35 KB |
-| `midia/transicoes/transicao-N-ida.mp4` / `.webm` | Travelling da parada N até a N+1 |
+| `midia/paradas/parada-N.webp` | Imagem da parada N (0 a 7), 1920x1440, 31 a 43 KB |
+| `midia/transicoes/transicao-N-ida.mp4` / `.webm` | Travelling da parada N até a N+1, 1600x1200, 23 quadros, 70 a 165 KB |
 | `midia/transicoes/transicao-N-volta.mp4` / `.webm` | O mesmo, de volta |
 
 Opções de `vitrine.py`: `--parada` (0 a 7), `--largura`, `--altura`, `--amostras`, `--previa`, `--saida` e `--blend` (salva o arquivo `.blend` para abrir no Blender).
