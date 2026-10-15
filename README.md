@@ -128,6 +128,34 @@ sh 3d/renderizar_todas.sh 96          # as 8 paradas (~12 min cada) e as imagens
 sh 3d/renderizar_transicoes.sh        # as 7 transições (~12 min cada) e os vídeos de midia/transicoes/
 ```
 
+### Renderizar em outro computador
+
+Tudo o que a cena precisa está no repositório; só as texturas são baixadas. Num computador com placa de vídeo o render fica muitas vezes mais rápido.
+
+1. Instale Python 3.13, `ffmpeg` (só para as transições) e Git. No Windows, rode os scripts `.sh` no Git Bash ou no WSL.
+2. Clone e prepare:
+
+   ```sh
+   git clone https://github.com/lucasfranco-dev/hub-trackfield.git && cd hub-trackfield
+   python -m venv .venv-blender
+   .venv-blender/bin/pip install bpy==5.2.2 pillow       # no Windows: .venv-blender/Scripts/pip
+   sh 3d/baixar_texturas.sh
+   ```
+
+3. Renderize na placa de vídeo com `DISPOSITIVO=GPU` (detecta OptiX/CUDA da NVIDIA, HIP da AMD, Metal do Mac ou oneAPI da Intel; sem GPU compatível, volta para a CPU):
+
+   ```sh
+   DISPOSITIVO=GPU .venv-blender/bin/python 3d/vitrine.py --parada 0 --previa   # teste rápido
+   DISPOSITIVO=GPU sh 3d/renderizar_todas.sh 256                                # paradas com mais amostras
+   DISPOSITIVO=GPU sh 3d/renderizar_transicoes.sh                               # transições
+   ```
+
+   No Windows, se o venv ficou em `.venv-blender/Scripts/python.exe`, defina `PYTHON_BLENDER=.venv-blender/Scripts/python.exe` antes dos scripts. Também dá para usar o Blender 5.2 instalado, sem venv: `blender -b --python 3d/vitrine.py -- --parada 0 --dispositivo GPU`.
+
+4. Faça o commit de `3d/renders/` e `midia/` e siga os passos de [Mídias da página](#mídias-da-página) para publicar.
+
+Não rode o mesmo render em dois computadores ao mesmo tempo: combine antes qual máquina faz o quê.
+
 ### Mídias da página
 
 A página carrega as imagens e os vídeos de `midia/` pelo jsDelivr, a partir de uma tag fixa do repositório (por isso o repositório é público): `https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@midia-v1/midia/`. Uma tag nunca muda, então o cache da CDN não atrapalha. Para trocar as mídias:

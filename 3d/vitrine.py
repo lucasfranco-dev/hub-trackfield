@@ -438,6 +438,33 @@ def animar_transicao(origem, quadros):
     return cam
 
 
+def configurar_dispositivo(nome):
+    """CPU (padrão) ou placa de vídeo. "GPU" tenta OPTIX, CUDA, HIP, METAL e ONEAPI, nessa
+    ordem; também dá para pedir um tipo direto (ex.: "OPTIX"). Sem GPU compatível, usa a CPU."""
+    cena = bpy.context.scene
+    nome = nome.upper()
+    if nome == "CPU":
+        cena.cycles.device = "CPU"
+        return
+    prefs = bpy.context.preferences.addons["cycles"].preferences
+    tipos = ["OPTIX", "CUDA", "HIP", "METAL", "ONEAPI"] if nome == "GPU" else [nome]
+    for tipo in tipos:
+        try:
+            prefs.compute_device_type = tipo
+        except TypeError:
+            continue
+        prefs.get_devices()
+        gpus = [d for d in prefs.devices if d.type == tipo]
+        if gpus:
+            for d in prefs.devices:
+                d.use = d.type == tipo
+            cena.cycles.device = "GPU"
+            print(f"Renderizando na GPU ({tipo}):", ", ".join(d.name for d in gpus))
+            return
+    print("Nenhuma GPU compatível encontrada; renderizando na CPU.")
+    cena.cycles.device = "CPU"
+
+
 def configurar_render(largura, altura, amostras, saida):
     cena = bpy.context.scene
     cena.render.engine = "CYCLES"
@@ -474,6 +501,9 @@ def main():
     p.add_argument("--largura", type=int, default=1600)
     p.add_argument("--altura", type=int, default=1200)
     p.add_argument("--amostras", type=int, default=256)
+    p.add_argument("--dispositivo", default=os.environ.get("DISPOSITIVO", "CPU"),
+                   help="CPU (padrão), GPU (detecta a placa) ou um tipo: OPTIX, CUDA, HIP, METAL, ONEAPI. "
+                        "Também pela variável DISPOSITIVO")
     p.add_argument("--previa", action="store_true", help="480x360 com 24 amostras")
     p.add_argument("--saida", default=os.path.join(PASTA, "renders", "parada-{parada}.png"))
     p.add_argument("--blend", help="Salva também o arquivo .blend neste caminho")
@@ -500,9 +530,11 @@ def main():
             sys.exit("A transição vai da parada --parada até a seguinte: use 0 a %d." % (len(PARADAS) - 2))
         animar_transicao(a.parada, a.quadros)
         configurar_render(a.largura, a.altura, a.amostras, os.path.join(saida, "quadro-####"))
+        configurar_dispositivo(a.dispositivo)
     else:
         posicionar_camera(a.parada)
         configurar_render(a.largura, a.altura, a.amostras, saida)
+        configurar_dispositivo(a.dispositivo)
     if a.blend:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(a.blend))
     if a.transicao and a.apenas_quadro:
