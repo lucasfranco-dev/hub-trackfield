@@ -9,7 +9,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | Projeto no Apps Script | [abrir no editor](https://script.google.com/d/1g-Re2_3aVLnRRAj_56KY8RO1RIAdNUp-9NhAM2XxMt5NHkWEf-Kkn_2c/edit) |
 | Histórico de mudanças | [CHANGELOG.md](CHANGELOG.md) |
 
-![Prévia no computador](docs/previa/computador.png)
+![O Hub no ar, no computador e no celular](docs/previa/hub-no-ar.png)
 
 ## Estrutura
 

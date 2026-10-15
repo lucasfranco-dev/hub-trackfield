@@ -4,6 +4,8 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 
 ## [Não publicado]
 
+## [2.0.0] - 2026-10-15
+
 ### Adicionado
 - `vitrine.py --dispositivo` (ou variável `DISPOSITIVO`): renderiza na placa de vídeo (OptiX, CUDA, HIP, Metal ou oneAPI), com volta automática para a CPU. README com o passo a passo para renderizar em outro computador.
 - Fase 3: a página mostra os renders 3D da vitrine no lugar das fotos, com travelling em vídeo entre produtos vizinhos (ida e volta) e fade nos saltos maiores ou com "reduzir movimento".
