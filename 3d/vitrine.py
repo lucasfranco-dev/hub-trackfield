@@ -410,6 +410,34 @@ def posicionar_camera(parada):
     return cam
 
 
+def suavizar_tempo(t):
+    """Aceleração e frenagem suaves (smootherstep), como um travelling de câmera."""
+    return t * t * t * (t * (6 * t - 15) + 10)
+
+
+def animar_transicao(origem, quadros):
+    """Anima a câmera da parada `origem` até a seguinte em `quadros` quadros.
+    O primeiro e o último quadro são exatamente os enquadramentos das duas paradas.
+    A lente é interpolada pelo ângulo de visão, para o zoom parecer uniforme."""
+    cam = posicionar_camera(origem)
+    (l0, f0), (l1, f1) = enquadramento(origem), enquadramento(origem + 1)
+    ang0, ang1 = 2 * math.atan(18 / f0), 2 * math.atan(18 / f1)
+    for q in range(quadros):
+        t = suavizar_tempo(q / (quadros - 1))
+        cam.location = Vector(l0).lerp(Vector(l1), t)
+        cam.data.lens = 18 / math.tan((ang0 + (ang1 - ang0) * t) / 2)
+        cam.keyframe_insert("location", frame=q + 1)
+        cam.data.keyframe_insert("lens", frame=q + 1)
+    cena = bpy.context.scene
+    cena.frame_start, cena.frame_end = 1, quadros
+    cena.render.fps = 24
+    # Desfoque de movimento leve: deixa o travelling natural e esconde o ruído das poucas amostras.
+    cena.render.use_motion_blur = os.environ.get("DESFOQUE", "1") == "1"
+    cena.render.motion_blur_shutter = 0.5
+    cena.render.use_persistent_data = True
+    return cam
+
+
 def configurar_render(largura, altura, amostras, saida):
     cena = bpy.context.scene
     cena.render.engine = "CYCLES"
@@ -449,22 +477,40 @@ def main():
     p.add_argument("--previa", action="store_true", help="480x360 com 24 amostras")
     p.add_argument("--saida", default=os.path.join(PASTA, "renders", "parada-{parada}.png"))
     p.add_argument("--blend", help="Salva também o arquivo .blend neste caminho")
+    p.add_argument("--transicao", action="store_true",
+                   help="Renderiza os quadros do travelling da parada --parada até a seguinte; "
+                        "--saida vira a pasta dos quadros")
+    p.add_argument("--quadros", type=int, default=24, help="Quadros da transição (24 por segundo)")
+    p.add_argument("--apenas-quadro", type=int, help="Renderiza só este quadro da transição (para testar)")
     a = p.parse_args(argv)
     if a.previa:
         a.largura, a.altura, a.amostras = 480, 360, 24
     saida = os.path.abspath(a.saida.format(parada=a.parada))
-    os.makedirs(os.path.dirname(saida), exist_ok=True)
+    os.makedirs(saida if a.transicao else os.path.dirname(saida), exist_ok=True)
 
     limpar_cena()
     mats = criar_materiais()
     montar_cenario(mats)
     montar_paradas(mats)
-    posicionar_camera(a.parada)
-    configurar_render(a.largura, a.altura, a.amostras, saida)
+    if a.transicao:
+        if not 0 <= a.parada < len(PARADAS) - 1:
+            sys.exit("A transição vai da parada --parada até a seguinte: use 0 a %d." % (len(PARADAS) - 2))
+        animar_transicao(a.parada, a.quadros)
+        configurar_render(a.largura, a.altura, a.amostras, os.path.join(saida, "quadro-####"))
+    else:
+        posicionar_camera(a.parada)
+        configurar_render(a.largura, a.altura, a.amostras, saida)
     if a.blend:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(a.blend))
-    bpy.ops.render.render(write_still=True)
-    print("Render salvo em", saida)
+    if a.transicao and a.apenas_quadro:
+        cena = bpy.context.scene
+        cena.frame_start = cena.frame_end = a.apenas_quadro
+    if a.transicao:
+        bpy.ops.render.render(animation=True)
+        print("Quadros salvos em", saida)
+    else:
+        bpy.ops.render.render(write_still=True)
+        print("Render salvo em", saida)
 
 
 if __name__ == "__main__":

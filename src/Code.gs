@@ -9,7 +9,7 @@
 // Planilha "Hub Track&Field: links". Usada quando o script não está vinculado a ela.
 const ID_PLANILHA = '1eSkaq6dsmBnoYOXWYdMJFE7LAEQMngrRszZE_ed4OUE';
 const ABA_LINKS = 'Links';
-const CHAVE_CACHE = 'links-v1';
+const CHAVE_CACHE = 'links-v2';
 // Edições na planilha aparecem no Hub em até 1 minuto.
 const CACHE_SEGUNDOS = 60;
 
@@ -22,8 +22,6 @@ const COLUNAS = {
   descricao: 'descricao',
   url: 'url',
   produto: 'produto',
-  expositor: 'expositor',
-  imagem: 'imagem',
 };
 
 function doGet() {
@@ -73,8 +71,6 @@ function lerLinks_() {
       descricao: texto_(linha[col.descricao]),
       url: texto_(linha[col.url]),
       produto: texto_(linha[col.produto]),
-      expositor: texto_(linha[col.expositor]) || 'Manequim',
-      imagem: texto_(linha[col.imagem]),
     }))
     .filter((l) => l.ativo && l.nome && /^https?:\/\//i.test(l.url))
     .sort((a, b) => a.ordem - b.ordem)

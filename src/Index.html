@@ -7,7 +7,7 @@
   <title>Hub Track&amp;Field</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://trackfield.vtexassets.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -16,18 +16,13 @@
       --ripado-escuro: #4f321e;
       --moldura: #b3aca2;
       --moldura-escura: #958e84;
-      --parede: #f3f3f0;
-      --piso: #b88f64;
-      --piso-junta: #9a7350;
-      --madeira-cubo: #c9a073;
-      --madeira-topo: #dcbb93;
+      --parede: #ece9e4;
       --noturno: #1f2740;
-      --noturno-suave: #565d72;
-      --luz: 255 243 220;
+      --noturno-suave: #4e5569;
       --fonte: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
-      --curva-camera: cubic-bezier(.62, .02, .24, 1);
-      --tempo-camera: 950ms;
-      --chao: 15%;
+      --saida: cubic-bezier(.23, 1, .32, 1);
+      /* Enquadramento dos renders 4:3: produto a 65% da largura. */
+      --foco: 65% 45%;
     }
 
     * { box-sizing: border-box; }
@@ -89,164 +84,87 @@
         0 0 36px rgb(255 232 196 / .45);
     }
 
-    /* Moldura cinza da vitrine */
+    /* Moldura cinza: a vitrine fica centralizada e no máximo 1,8x mais larga que alta,
+       para os renders 4:3 não perderem a cabeça dos manequins em telas largas. */
     .moldura {
       min-height: 0;
+      display: flex;
+      justify-content: center;
       padding: 10px clamp(8px, 2.2vw, 30px) 0;
       background: linear-gradient(180deg, var(--moldura-escura), var(--moldura) 30px);
     }
 
     .vitrine {
-      --i: 0;
-      --baia: 600px;
-      --meio: 400px;
       position: relative;
-      height: 100%;
-      overflow: hidden;
-      background:
-        linear-gradient(180deg, rgb(255 255 255 / .9), rgb(255 255 255 / 0) 9%),
-        linear-gradient(180deg, #caa47b, var(--piso) 40%, var(--piso-junta)) left bottom / 100% var(--chao) no-repeat,
-        var(--parede);
-      touch-action: pan-y;
-      cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .vitrine.arrastando { cursor: grabbing; }
-
-    .camada {
-      position: absolute;
-      inset: 0 auto 0 0;
-      display: flex;
-      height: 100%;
-      transform: translate3d(calc(var(--meio) - (var(--i) + .5) * var(--baia) * var(--f)), 0, 0);
-      transition: transform var(--tempo-camera) var(--curva-camera);
-      will-change: transform;
-    }
-    .arrastando .camada { transition: none; }
-    .camada > * { flex: none; width: calc(var(--baia) * var(--f)); position: relative; height: 100%; }
-
-    /* Fundo: parede com o logo em relevo, como nas lojas */
-    .parede { --f: .72; }
-    .parede-baia::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 1px;
-      background: rgb(0 0 0 / .045);
-    }
-    .relevo {
-      position: absolute;
-      top: 5%;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: clamp(30px, 4.6vw, 72px);
-      font-weight: 500;
-      letter-spacing: -.02em;
-      white-space: nowrap;
-      color: var(--parede);
-      text-shadow: 1px 1px 1px rgb(0 0 0 / .07), -1px -1px 1px rgb(255 255 255 / .9);
-    }
-
-    /* Palco: piso, luz e produtos */
-    .palco { --f: 1; }
-    .palco-baia::after {
-      content: "";
-      position: absolute;
-      inset: auto 0 0 0;
-      height: var(--chao);
-      background: repeating-linear-gradient(90deg, transparent 0 calc(var(--baia) / 4 - 2px), rgb(60 36 18 / .22) calc(var(--baia) / 4 - 2px) calc(var(--baia) / 4));
-      box-shadow: 0 -1px 0 rgb(0 0 0 / .12);
-    }
-    .spot {
-      position: absolute;
-      inset: 0 0 0 0;
-      background:
-        radial-gradient(ellipse 30% 85% at var(--x) 0%, rgb(var(--luz) / .85), rgb(var(--luz) / 0) 75%),
-        radial-gradient(ellipse 26% 5% at var(--x) calc(100% - var(--chao) + 1%), rgb(var(--luz) / .9), rgb(var(--luz) / 0) 100%);
-      opacity: 0;
-      transition: opacity .5s ease;
-      pointer-events: none;
-      z-index: 0;
-      mix-blend-mode: screen;
-    }
-    .acesa .ativa .spot { opacity: 1; transition-delay: calc(var(--tempo-camera) * .55); }
-
-    .produto {
-      position: absolute;
-      left: var(--x);
-      bottom: calc(var(--chao) - 1%);
-      transform: translateX(-50%);
-      display: block;
-      z-index: 1;
-      outline: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .produto img {
-      display: block;
       height: 100%;
       width: auto;
-      aspect-ratio: 600 / 839;
-      mix-blend-mode: multiply;
-      -webkit-mask-image: radial-gradient(ellipse 50% 52% at 50% 46%, #000 58%, transparent 100%);
-      mask-image: radial-gradient(ellipse 50% 52% at 50% 46%, #000 58%, transparent 100%);
-      /* Clareia o fundo cinza da foto para ele sumir na parede. */
-      filter: brightness(1.07) contrast(1.08);
-      transition: filter .5s ease;
+      max-width: 100%;
+      aspect-ratio: 1.8;
+      overflow: hidden;
+      background: var(--parede);
+      touch-action: pan-y;
+      user-select: none;
+      -webkit-user-select: none;
+      box-shadow: inset 0 0 0 1px rgb(0 0 0 / .06);
+    }
+
+    .quadro, .travelling {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: var(--foco);
       -webkit-user-drag: none;
     }
-    .palco-baia:not(.ativa) .produto img { filter: brightness(1.04) contrast(1.04) saturate(.6); }
-    .manequim .produto { height: 76%; }
-    .cubo .produto { height: 72%; }
-    .cubo .produto { display: flex; flex-direction: column; justify-content: flex-end; }
-    .cubo .produto img {
-      height: 66%;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-      /* A foto tem respiro embaixo; desce a mala até o tampo do cubo. */
-      transform: translateY(20%);
+    .quadro { transition: opacity .45s ease; }
+    .quadro.saindo { opacity: 0; }
+    .quadro.fundo { z-index: 0; }
+    .quadro.frente { z-index: 1; }
+    .travelling {
+      z-index: 2;
+      opacity: 0;
+      pointer-events: none;
     }
-    .bloco {
-      position: relative;
-      flex: none;
-      height: 34%;
-      aspect-ratio: 1.15 / 1;
-      margin: 0 auto;
-      background:
-        linear-gradient(180deg, var(--madeira-topo) 0 11%, rgb(0 0 0 / .12) 11% 12%, rgb(255 255 255 / .06) 12% 20%, transparent 20% 82%, rgb(0 0 0 / .08)),
-        repeating-linear-gradient(90deg, rgb(0 0 0 / 0) 0 11px, rgb(110 70 35 / .08) 11px 12px),
-        linear-gradient(90deg, #b88d60, var(--madeira-cubo) 30%, #bb9064);
-      box-shadow: 0 18px 20px -14px rgb(60 36 18 / .5);
-    }
-    .sombra {
-      position: absolute;
-      left: 50%;
-      bottom: -3%;
-      width: 70%;
-      height: 6%;
-      transform: translateX(-50%);
-      background: radial-gradient(ellipse at center, rgb(40 25 12 / .28), transparent 70%);
-      z-index: -1;
-    }
-    .produto:focus-visible img { outline: 2px solid var(--noturno); outline-offset: 6px; }
+    .travelling.visivel { opacity: 1; }
 
-    /* Vidro: adesivos com o nome de cada link, mais próximos da câmera */
-    .vidro { --f: 1.22; pointer-events: none; z-index: 3; }
+    /* Área clicável sobre o produto. */
+    .alvo-produto {
+      position: absolute;
+      z-index: 3;
+      left: 52%;
+      width: 26%;
+      top: 8%;
+      bottom: 8%;
+      border-radius: 40px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .alvo-produto:focus-visible { outline: 2px solid var(--noturno); outline-offset: -6px; }
+
+    /* Adesivo no vidro com o nome do link. */
     .adesivo {
       position: absolute;
-      left: 9%;
+      z-index: 4;
+      left: 7%;
       top: 50%;
       width: 40%;
-      transform: translateY(-58%);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .adesivo > * {
       opacity: 0;
-      transition: opacity .3s ease;
+      transform: translateY(8px);
+      transition: opacity .2s ease, transform .2s ease;
     }
-    .vidro-baia.ativa .adesivo {
+    .adesivo.visivel > * {
       opacity: 1;
-      transition: opacity .55s ease calc(var(--tempo-camera) * .5);
-      pointer-events: auto;
+      transform: none;
+      transition: opacity .45s var(--saida), transform .45s var(--saida);
     }
+    .adesivo.visivel > :nth-child(2) { transition-delay: 40ms; }
+    .adesivo.visivel > :nth-child(3) { transition-delay: 80ms; }
+    .adesivo.visivel > :nth-child(4) { transition-delay: 120ms; }
+    .adesivo.visivel .abrir { pointer-events: auto; }
     .categoria {
       margin: 0 0 10px;
       font-size: 15px;
@@ -281,7 +199,7 @@
       font-size: 16px;
       font-weight: 500;
       text-decoration: none;
-      transition: background-color .2s ease, transform .2s ease;
+      transition: background-color .2s ease, transform .15s ease;
     }
     .abrir svg { width: 14px; height: 14px; transition: transform .2s ease; }
     .abrir:active { transform: scale(.97); }
@@ -291,15 +209,6 @@
       .abrir:hover svg { transform: translate(2px, -2px); }
     }
 
-    .reflexo {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 4;
-      background:
-        linear-gradient(105deg, transparent 0 38%, rgb(255 255 255 / .16) 41%, transparent 47%, transparent 52%, rgb(255 255 255 / .08) 54%, transparent 58%),
-        linear-gradient(180deg, rgb(20 16 12 / .10), transparent 18%);
-    }
     .apagado {
       position: absolute;
       inset: 0;
@@ -346,6 +255,7 @@
       text-align: center;
       font-size: 18px;
       color: var(--noturno-suave);
+      background: var(--parede);
     }
     .aviso strong { display: block; color: var(--noturno); font-weight: 500; font-size: 22px; margin-bottom: 6px; }
 
@@ -400,7 +310,7 @@
       border-radius: 2px;
       background: var(--noturno);
       transform: scaleX(0);
-      transition: transform .35s var(--curva-camera);
+      transition: transform .35s var(--saida);
     }
     .indice button[aria-current="true"] { color: var(--noturno); font-weight: 500; }
     .indice button[aria-current="true"]::after { transform: scaleX(1); }
@@ -414,34 +324,29 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Celular */
+    /* Celular: a vitrine ocupa a largura; o render é recortado em volta do produto. */
     @media (max-width: 720px) {
       .fachada { justify-content: center; }
-      .seta, .soleira-titulo, .contador, .relevo { display: none; }
+      .seta, .soleira-titulo, .contador { display: none; }
       .soleira { padding-inline: 8px; }
+      .vitrine { width: 100%; aspect-ratio: auto; }
       .adesivo {
-        inset: 5% 9% 5% 9%;
+        inset: 4% 7% 4% 7%;
         width: auto;
         transform: none;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        pointer-events: none;
       }
-      .vidro-baia.ativa .adesivo { pointer-events: none; }
-      .vidro-baia.ativa .abrir { pointer-events: auto; }
       .nome { font-size: clamp(28px, 8.4vw, 38px); }
       .categoria { margin-bottom: 6px; font-size: 14px; }
       .descricao { margin: 8px 0 0; font-size: 15px; }
       .abrir { margin-top: auto; align-self: stretch; justify-content: center; min-height: 52px; }
-      .manequim .produto { height: 56%; }
-      .cubo .produto { height: 54%; }
-      :root { --chao: 22%; }
+      .alvo-produto { left: 20%; width: 60%; top: 22%; bottom: 16%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      :root { --tempo-camera: 0ms; }
-      .letreiro, .apagado, .spot, .adesivo, .abrir, .indice button::after { transition: none !important; }
+      .letreiro, .apagado, .quadro, .adesivo > *, .abrir, .indice button::after { transition: none !important; }
     }
   </style>
 </head>
@@ -456,10 +361,10 @@
 
     <div class="moldura">
       <main class="vitrine" id="vitrine" aria-roledescription="carrossel" aria-label="Links da equipe">
-        <div class="camada parede" id="parede" aria-hidden="true"></div>
-        <div class="camada palco" id="palco"></div>
-        <div class="camada vidro" id="vidro"></div>
-        <div class="reflexo" aria-hidden="true"></div>
+        <img class="quadro fundo" id="quadroA" alt="" draggable="false" decoding="async">
+        <img class="quadro frente saindo" id="quadroB" alt="" draggable="false" decoding="async">
+        <a class="alvo-produto" id="alvoProduto" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true"></a>
+        <div class="adesivo" id="adesivo" role="group" aria-roledescription="link"></div>
         <div class="apagado" aria-hidden="true"></div>
         <button class="seta anterior" id="anterior" type="button" aria-label="Link anterior">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
@@ -482,52 +387,62 @@
   (function () {
     'use strict';
 
+    // Imagens e vídeos da vitrine 3D, servidos pela CDN do jsDelivr a partir da tag
+    // do repositório. Ao trocar as mídias, crie uma tag nova e atualize aqui.
+    var MIDIA = 'https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@midia-v1/midia/';
+
+    // Paradas da vitrine 3D, na ordem em que a câmera passa (3d/vitrine.py).
+    var VITRINE = ['Casaco PowerCool', 'Mala Duffel Matelassê', 'Camiseta ThermoDry', 'Shorts Laser',
+                   'Jaqueta Winter', 'Mala Trip', 'Camiseta Sports', 'Garrafa Urban 950 ml'];
+
     // Usado só na pré-visualização local, fora do Apps Script.
     var AMOSTRA = [
-      { nome: 'Sistema de vendas', categoria: 'Vendas', descricao: 'Pedidos, trocas e vendas do dia.', url: 'https://example.com/vendas', produto: 'Casaco PowerCool', expositor: 'Manequim', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/397887' },
-      { nome: 'Consulta de estoque', categoria: 'Estoque', descricao: 'Disponibilidade nesta loja e nas outras.', url: 'https://example.com/estoque', produto: 'Mala Duffel Matelassê', expositor: 'Cubo', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/439405' },
-      { nome: 'Escala e ponto', categoria: 'Equipe', descricao: 'Horários da semana e registro de ponto.', url: 'https://example.com/ponto', produto: 'Camiseta ThermoDry', expositor: 'Manequim', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/672372' },
-      { nome: 'Metas da loja', categoria: 'Resultados', descricao: 'Acompanhe as metas do dia e do mês.', url: 'https://example.com/metas', produto: 'Shorts Laser', expositor: 'Manequim', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/400676' },
-      { nome: 'Treinamentos', categoria: 'Aprendizado', descricao: 'Cursos sobre produtos e atendimento.', url: 'https://example.com/treinamentos', produto: 'Jaqueta Winter', expositor: 'Manequim', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/574254' },
-      { nome: 'Comunicados', categoria: 'Comunicação', descricao: 'Avisos da gestão e campanhas em vigor.', url: 'https://example.com/comunicados', produto: 'Mala Trip', expositor: 'Cubo', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/536919' },
-      { nome: 'Catálogo online', categoria: 'Produto', descricao: 'Toda a coleção no site oficial.', url: 'https://www.tf.com.br', produto: 'Camiseta Sports', expositor: 'Manequim', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/677935' },
-      { nome: 'Suporte', categoria: 'Ajuda', descricao: 'Abra um chamado para TI ou manutenção.', url: 'https://example.com/suporte', produto: 'Garrafa Urban 950 ml', expositor: 'Cubo', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/367085' }
+      { nome: 'Sistema de vendas', categoria: 'Vendas', descricao: 'Pedidos, trocas e vendas do dia.', url: 'https://example.com/vendas', produto: 'Casaco PowerCool' },
+      { nome: 'Consulta de estoque', categoria: 'Estoque', descricao: 'Disponibilidade nesta loja e nas outras.', url: 'https://example.com/estoque', produto: 'Mala Duffel Matelassê' },
+      { nome: 'Escala e ponto', categoria: 'Equipe', descricao: 'Horários da semana e registro de ponto.', url: 'https://example.com/ponto', produto: 'Camiseta ThermoDry' },
+      { nome: 'Metas da loja', categoria: 'Resultados', descricao: 'Acompanhe as metas do dia e do mês.', url: 'https://example.com/metas', produto: 'Shorts Laser' },
+      { nome: 'Treinamentos', categoria: 'Aprendizado', descricao: 'Cursos sobre produtos e atendimento.', url: 'https://example.com/treinamentos', produto: 'Jaqueta Winter' },
+      { nome: 'Comunicados', categoria: 'Comunicação', descricao: 'Avisos da gestão e campanhas em vigor.', url: 'https://example.com/comunicados', produto: 'Mala Trip' },
+      { nome: 'Catálogo online', categoria: 'Produto', descricao: 'Toda a coleção no site oficial.', url: 'https://www.tf.com.br', produto: 'Camiseta Sports' },
+      { nome: 'Suporte', categoria: 'Ajuda', descricao: 'Abra um chamado para TI ou manutenção.', url: 'https://example.com/suporte', produto: 'Garrafa Urban 950 ml' }
     ];
 
-    var loja = document.getElementById('loja');
-    var vitrine = document.getElementById('vitrine');
-    var parede = document.getElementById('parede');
-    var palco = document.getElementById('palco');
-    var vidro = document.getElementById('vidro');
-    var indice = document.getElementById('indice');
-    var contador = document.getElementById('contador');
-    var anuncio = document.getElementById('anuncio');
-    var btnAnterior = document.getElementById('anterior');
-    var btnProxima = document.getElementById('proxima');
+    var $ = function (id) { return document.getElementById(id); };
+    var loja = $('loja'), vitrine = $('vitrine'), adesivo = $('adesivo'), alvo = $('alvoProduto');
+    var indice = $('indice'), contador = $('contador'), anuncio = $('anuncio');
+    var btnAnterior = $('anterior'), btnProxima = $('proxima');
+    var quadros = [$('quadroA'), $('quadroB')];
+    var frente = 0;  // índice em `quadros` da imagem visível
 
+    var reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var dados = lerDados();
     var links = Array.isArray(dados) ? dados : (dados.links || []);
+    var paradas = links.map(paradaDoLink);
     var atual = 0;
-    var baia = 0;
-    var celular = false;
+    var ocupado = false;
+    var pedido = null;
+    var videos = {};
 
     function lerDados() {
-      try {
-        return JSON.parse(document.getElementById('dados').textContent);
-      } catch (e) {
-        return AMOSTRA;
-      }
+      try { return JSON.parse($('dados').textContent); } catch (e) { return AMOSTRA; }
     }
 
-    function urlSegura(url) {
-      return /^https?:\/\//i.test(String(url || '')) ? url : null;
+    function normalizar(t) {
+      return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
     }
 
-    // Fotos da VTEX aceitam tamanho no caminho: .../ids/123-600-839
-    function srcDaFoto(url, largura) {
-      var m = /^(.*\/arquivos\/ids\/\d+)(?:-\d+-\d+)?(?:\/.*)?$/.exec(url || '');
-      if (!m) return url;
-      return m[1] + '-' + largura + '-' + Math.round(largura * 839 / 600);
+    // Parada da vitrine de cada link: pelo nome do produto na planilha, ou pela ordem.
+    function paradaDoLink(link, i) {
+      var alvoNome = normalizar(link.produto);
+      for (var k = 0; k < VITRINE.length; k++) if (normalizar(VITRINE[k]) === alvoNome) return k;
+      return i % VITRINE.length;
+    }
+
+    function urlSegura(url) { return /^https?:\/\//i.test(String(url || '')) ? url : null; }
+    function srcQuadro(p) { return MIDIA + 'paradas/parada-' + p + '.webp'; }
+    function srcVideo(de, para) {
+      return para === de + 1 ? MIDIA + 'transicoes/transicao-' + de + '-ida.mp4'
+           : para === de - 1 ? MIDIA + 'transicoes/transicao-' + para + '-volta.mp4' : null;
     }
 
     function el(tag, classe, texto) {
@@ -539,64 +454,13 @@
 
     var ICONE_ABRIR = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5"/></svg>';
 
+    // ------------------------------------------------------------ montagem
+
     function montar() {
       if (dados && dados.erro) return mostrarAviso('Não foi possível ler a planilha', dados.erro);
       if (!links.length) return mostrarAviso('Nenhum link ativo', 'Marque a coluna Ativo na planilha para exibir os links aqui.');
 
       links.forEach(function (link, i) {
-        var url = urlSegura(link.url);
-        var cubo = String(link.expositor || '').toLowerCase() === 'cubo';
-
-        var p = el('div', 'parede-baia');
-        if (i % 3 === 1) p.appendChild(el('span', 'relevo', 'Track&Field'));
-        parede.appendChild(p);
-
-        var baiaPalco = el('div', 'palco-baia ' + (cubo ? 'cubo' : 'manequim'));
-        baiaPalco.dataset.i = i;
-        baiaPalco.appendChild(el('div', 'spot'));
-        var produto = el('a', 'produto');
-        if (url) { produto.href = url; produto.target = '_blank'; produto.rel = 'noopener noreferrer'; }
-        produto.tabIndex = -1;
-        produto.setAttribute('aria-hidden', 'true');
-        produto.draggable = false;
-        if (link.imagem) {
-          var img = el('img');
-          img.alt = '';
-          img.draggable = false;
-          img.decoding = 'async';
-          img.src = srcDaFoto(link.imagem, 600);
-          img.srcset = srcDaFoto(link.imagem, 600) + ' 600w, ' + srcDaFoto(link.imagem, 800) + ' 800w, ' + srcDaFoto(link.imagem, 1200) + ' 1200w';
-          img.sizes = '(max-width: 720px) 70vw, 34vw';
-          if (i === 0) img.setAttribute('fetchpriority', 'high');
-          produto.appendChild(img);
-        }
-        if (cubo) produto.appendChild(el('div', 'bloco'));
-        produto.appendChild(el('div', 'sombra'));
-        baiaPalco.appendChild(produto);
-        palco.appendChild(baiaPalco);
-
-        var baiaVidro = el('div', 'vidro-baia');
-        var adesivo = el('div', 'adesivo');
-        adesivo.id = 'link-' + i;
-        adesivo.setAttribute('role', 'group');
-        adesivo.setAttribute('aria-roledescription', 'link');
-        adesivo.setAttribute('aria-label', (i + 1) + ' de ' + links.length);
-        if (link.categoria) adesivo.appendChild(el('p', 'categoria', link.categoria));
-        adesivo.appendChild(el('h2', 'nome', link.nome));
-        if (link.descricao) adesivo.appendChild(el('p', 'descricao', link.descricao));
-        if (url) {
-          var abrir = el('a', 'abrir');
-          abrir.href = url;
-          abrir.target = '_blank';
-          abrir.rel = 'noopener noreferrer';
-          abrir.textContent = 'Abrir';
-          abrir.insertAdjacentHTML('beforeend', ICONE_ABRIR);
-          abrir.setAttribute('aria-label', 'Abrir ' + link.nome + ' em nova aba');
-          adesivo.appendChild(abrir);
-        }
-        baiaVidro.appendChild(adesivo);
-        vidro.appendChild(baiaVidro);
-
         var li = el('li');
         var b = el('button', null, link.nome);
         b.type = 'button';
@@ -605,9 +469,14 @@
         indice.appendChild(li);
       });
 
-      medir();
-      irPara(0, true);
+      quadros[0].src = srcQuadro(paradas[0]);
+      quadros[0].setAttribute('fetchpriority', 'high');
+      preencherAdesivo(0);
+      marcar(0, true);
+      adesivo.classList.add('visivel');
+      prepararVizinhos();
       ligarEventos();
+      acenderQuandoPronto(quadros[0]);
     }
 
     function mostrarAviso(titulo, texto) {
@@ -617,56 +486,171 @@
       caixa.appendChild(document.createTextNode(texto));
       aviso.appendChild(caixa);
       vitrine.appendChild(aviso);
-      btnAnterior.disabled = true;
-      btnProxima.disabled = true;
+      btnAnterior.disabled = btnProxima.disabled = true;
       acender();
     }
 
-    function medir() {
-      var largura = vitrine.clientWidth;
-      celular = largura <= 720;
-      baia = Math.round(largura * (celular ? 0.86 : 0.7));
-      vitrine.style.setProperty('--baia', baia + 'px');
-      vitrine.style.setProperty('--meio', Math.round(largura / 2) + 'px');
-      // Produto à direita do adesivo no computador; centralizado no celular.
-      vitrine.style.setProperty('--x', celular ? '50%' : '66%');
+    function preencherAdesivo(i) {
+      var link = links[i];
+      var url = urlSegura(link.url);
+      adesivo.textContent = '';
+      adesivo.setAttribute('aria-label', (i + 1) + ' de ' + links.length);
+      if (link.categoria) adesivo.appendChild(el('p', 'categoria', link.categoria));
+      adesivo.appendChild(el('h2', 'nome', link.nome));
+      if (link.descricao) adesivo.appendChild(el('p', 'descricao', link.descricao));
+      if (url) {
+        var abrir = el('a', 'abrir');
+        abrir.href = url;
+        abrir.target = '_blank';
+        abrir.rel = 'noopener noreferrer';
+        abrir.textContent = 'Abrir';
+        abrir.insertAdjacentHTML('beforeend', ICONE_ABRIR);
+        abrir.setAttribute('aria-label', 'Abrir ' + link.nome + ' em nova aba');
+        adesivo.appendChild(abrir);
+        alvo.href = url;
+      } else {
+        alvo.removeAttribute('href');
+      }
     }
 
-    function irPara(i, inicial) {
-      var total = links.length;
-      i = Math.max(0, Math.min(total - 1, i));
-      var mudou = i !== atual;
-      atual = i;
-      vitrine.style.setProperty('--i', i);
-
-      Array.prototype.forEach.call(palco.children, function (n, k) { n.classList.toggle('ativa', k === i); });
-      Array.prototype.forEach.call(vidro.children, function (n, k) {
-        var ativa = k === i;
-        n.classList.toggle('ativa', ativa);
-        n.firstChild.setAttribute('aria-hidden', ativa ? 'false' : 'true');
-        var a = n.querySelector('.abrir');
-        if (a) a.tabIndex = ativa ? 0 : -1;
-      });
+    function marcar(i, inicial) {
       Array.prototype.forEach.call(indice.querySelectorAll('button'), function (b, k) {
         b.setAttribute('aria-current', k === i ? 'true' : 'false');
       });
-
       btnAnterior.disabled = i === 0;
-      btnProxima.disabled = i === total - 1;
-      contador.textContent = (i + 1) + ' de ' + total;
-      centralizarIndice(inicial);
-      if (mudou && !inicial) anuncio.textContent = links[i].nome + ', ' + (i + 1) + ' de ' + total;
+      btnProxima.disabled = i === links.length - 1;
+      contador.textContent = (i + 1) + ' de ' + links.length;
+      var b = indice.querySelectorAll('button')[i];
+      if (b) indice.scrollTo({ left: b.offsetLeft - (indice.clientWidth - b.offsetWidth) / 2, behavior: inicial ? 'auto' : 'smooth' });
+      if (!inicial) anuncio.textContent = links[i].nome + ', ' + (i + 1) + ' de ' + links.length;
     }
 
-    function centralizarIndice(inicial) {
-      var b = indice.querySelectorAll('button')[atual];
-      if (!b) return;
-      var alvo = b.offsetLeft - (indice.clientWidth - b.offsetWidth) / 2;
-      indice.scrollTo({ left: alvo, behavior: inicial ? 'auto' : 'smooth' });
+    // ------------------------------------------------------------ mídia
+
+    // Pré-carrega as imagens dos vizinhos e os vídeos das transições possíveis a partir daqui.
+    function prepararVizinhos() {
+      [atual - 1, atual + 1].forEach(function (i) {
+        if (i < 0 || i >= links.length) return;
+        new Image().src = srcQuadro(paradas[i]);
+        if (!reduzido) obterVideo(srcVideo(paradas[atual], paradas[i]));
+      });
+      // Depois do primeiro instante, carrega o resto das imagens sem pressa.
+      setTimeout(function () { paradas.forEach(function (p) { new Image().src = srcQuadro(p); }); }, 2500);
+    }
+
+    function obterVideo(src) {
+      if (!src) return null;
+      if (videos[src]) return videos[src];
+      var v = document.createElement('video');
+      v.className = 'travelling';
+      v.muted = true;
+      v.defaultMuted = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline', '');
+      v.setAttribute('aria-hidden', 'true');
+      v.preload = 'auto';
+      v.src = src;
+      vitrine.insertBefore(v, alvo);
+      videos[src] = v;
+      return v;
+    }
+
+    function carregarImagem(img, src) {
+      return new Promise(function (ok) {
+        if (img.getAttribute('src') === src && img.complete && img.naturalWidth) return ok();
+        img.onload = img.onerror = function () { ok(); };
+        img.src = src;
+        if (img.decode) img.decode().then(ok, ok);
+      });
+    }
+
+    function videoPronto(v, ms) {
+      return new Promise(function (ok) {
+        if (v.readyState >= 3) return ok(true);
+        var feito = false;
+        var fim = function (r) { if (!feito) { feito = true; ok(r); } };
+        v.addEventListener('canplaythrough', function () { fim(true); }, { once: true });
+        setTimeout(function () { fim(v.readyState >= 3); }, ms);
+      });
+    }
+
+    // Troca a imagem visível por outra, com fade (ou na hora, com `instantaneo`).
+    function trocarQuadro(src, instantaneo) {
+      var atras = quadros[1 - frente];
+      return carregarImagem(atras, src).then(function () {
+        if (instantaneo) atras.style.transition = 'none';
+        atras.classList.remove('fundo', 'saindo');
+        atras.classList.add('frente');
+        void atras.offsetWidth;  // aplica a troca antes de devolver a transição
+        var antes = quadros[frente];
+        antes.classList.remove('frente');
+        antes.classList.add('fundo');
+        frente = 1 - frente;
+        return new Promise(function (ok) {
+          setTimeout(function () {
+            antes.classList.add('saindo');
+            atras.style.transition = '';
+            ok();
+          }, instantaneo ? 0 : 460);
+        });
+      });
+    }
+
+    // ------------------------------------------------------------ navegação
+
+    function irPara(i) {
+      i = Math.max(0, Math.min(links.length - 1, i));
+      if (i === atual) return;
+      if (ocupado) { pedido = i; return; }
+      ocupado = true;
+      var de = atual;
+      atual = i;
+      marcar(i);
+      adesivo.classList.remove('visivel');
+
+      var destino = srcQuadro(paradas[i]);
+      var video = reduzido ? null : obterVideo(srcVideo(paradas[de], paradas[i]));
+      var passo = video ? videoPronto(video, 450).then(function (pronto) {
+        return pronto ? tocarTravelling(video, destino) : trocarQuadro(destino);
+      }) : trocarQuadro(destino, reduzido);
+
+      passo.then(function () {
+        preencherAdesivo(i);
+        requestAnimationFrame(function () { adesivo.classList.add('visivel'); });
+        ocupado = false;
+        prepararVizinhos();
+        if (pedido !== null) { var p = pedido; pedido = null; irPara(p); }
+      });
+    }
+
+    // O vídeo cobre a imagem atual, faz o travelling e, no fim, a imagem do destino
+    // (já carregada por trás) fica no lugar dele.
+    function tocarTravelling(video, destino) {
+      return new Promise(function (ok) {
+        var atras = quadros[1 - frente];
+        var preparo = carregarImagem(atras, destino);
+        video.currentTime = 0;
+        video.classList.add('visivel');
+        var terminou = function () {
+          preparo.then(function () {
+            trocarQuadro(destino, true).then(function () {
+              video.classList.remove('visivel');
+              ok();
+            });
+          });
+        };
+        video.addEventListener('ended', terminou, { once: true });
+        var tocando = video.play();
+        if (tocando && tocando.catch) tocando.catch(function () {
+          video.removeEventListener('ended', terminou);
+          video.classList.remove('visivel');
+          trocarQuadro(destino).then(ok);
+        });
+      });
     }
 
     function abrirAtual() {
-      var a = vidro.children[atual] && vidro.children[atual].querySelector('.abrir');
+      var a = adesivo.querySelector('.abrir');
       if (a) a.click();
     }
 
@@ -694,84 +678,46 @@
         if (Math.abs(acumulado) > 40) {
           irPara(atual + (acumulado > 0 ? 1 : -1));
           acumulado = 0;
-          travadoAte = agora + 650;
+          travadoAte = agora + 900;
         }
       }, { passive: false });
 
-      // Arrastar com dedo ou mouse: a vitrine acompanha o gesto.
-      var inicioX = null, inicioY = 0, deslocamento = 0, arrastando = false, inicioT = 0, idPonteiro = null;
+      // Deslizar o dedo (ou arrastar o mouse) para os lados troca de link.
+      var inicioX = null, inicioY = 0, inicioT = 0, arrastou = false;
       vitrine.addEventListener('pointerdown', function (e) {
         if (e.button !== 0 || e.target.closest('.seta, .abrir')) return;
-        inicioX = e.clientX; inicioY = e.clientY; deslocamento = 0; arrastando = false;
-        inicioT = performance.now(); idPonteiro = e.pointerId;
+        inicioX = e.clientX; inicioY = e.clientY; inicioT = performance.now(); arrastou = false;
       });
       vitrine.addEventListener('pointermove', function (e) {
-        if (inicioX === null || e.pointerId !== idPonteiro) return;
-        var dx = e.clientX - inicioX;
-        if (!arrastando) {
-          if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(e.clientY - inicioY)) return;
-          arrastando = true;
-          vitrine.classList.add('arrastando');
-          vitrine.setPointerCapture(idPonteiro);
+        if (inicioX !== null && Math.abs(e.clientX - inicioX) > 10) arrastou = true;
+      });
+      vitrine.addEventListener('pointerup', function (e) {
+        if (inicioX === null) return;
+        var dx = e.clientX - inicioX, dy = e.clientY - inicioY;
+        var rapido = Math.abs(dx) / Math.max(1, performance.now() - inicioT) > 0.4;
+        if (Math.abs(dx) > Math.abs(dy) && (Math.abs(dx) > vitrine.clientWidth * 0.15 || (rapido && Math.abs(dx) > 30))) {
+          irPara(atual + (dx < 0 ? 1 : -1));
         }
-        var limite = (atual === 0 && dx > 0) || (atual === links.length - 1 && dx < 0);
-        deslocamento = limite ? dx / 3 : dx;
-        vitrine.style.setProperty('--i', atual - deslocamento / baia);
+        inicioX = null;
       });
-      function soltar(e) {
-        if (inicioX === null || e.pointerId !== idPonteiro) return;
-        if (arrastando) {
-          vitrine.classList.remove('arrastando');
-          var velocidade = deslocamento / Math.max(1, performance.now() - inicioT);
-          var passo = (Math.abs(deslocamento) > baia * 0.18 || Math.abs(velocidade) > 0.5) ? (deslocamento < 0 ? 1 : -1) : 0;
-          irPara(atual + passo);
-          if (passo === 0) vitrine.style.setProperty('--i', atual);
-          var cancelarClique = function (ev) { ev.preventDefault(); ev.stopPropagation(); };
-          vitrine.addEventListener('click', cancelarClique, { capture: true, once: true });
-          setTimeout(function () { vitrine.removeEventListener('click', cancelarClique, { capture: true }); }, 0);
-        }
-        inicioX = null; arrastando = false;
-      }
-      vitrine.addEventListener('pointerup', soltar);
-      vitrine.addEventListener('pointercancel', soltar);
-
-      // Clicar num produto vizinho leva até ele em vez de abrir o link.
-      palco.addEventListener('click', function (e) {
-        var b = e.target.closest('.palco-baia');
-        if (!b) return;
-        var i = Number(b.dataset.i);
-        if (i !== atual) { e.preventDefault(); irPara(i); }
-      });
-
-      var timer;
-      window.addEventListener('resize', function () {
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-          vitrine.classList.add('arrastando');
-          medir();
-          irPara(atual, true);
-          requestAnimationFrame(function () { vitrine.classList.remove('arrastando'); });
-        }, 80);
-      });
+      vitrine.addEventListener('pointercancel', function () { inicioX = null; });
+      // Um arraste não pode virar clique no produto.
+      alvo.addEventListener('click', function (e) { if (arrastou) { e.preventDefault(); arrastou = false; } });
     }
 
-    function acender() {
-      requestAnimationFrame(function () { loja.classList.add('acesa'); });
+    function acender() { requestAnimationFrame(function () { loja.classList.add('acesa'); }); }
+
+    // Acende a loja quando a primeira imagem chega (ou depois de 1,2 s, o que vier antes).
+    function acenderQuandoPronto(img) {
+      var feito = false;
+      var vai = function () { if (!feito) { feito = true; acender(); } };
+      if (img.complete && img.naturalWidth) return vai();
+      img.addEventListener('load', vai, { once: true });
+      img.addEventListener('error', vai, { once: true });
+      setTimeout(vai, 1200);
     }
 
     montar();
-
-    // Acende a loja quando a primeira foto chega (ou depois de 600 ms, o que vier antes).
-    var primeira = palco.querySelector('img');
-    var acesa = false;
-    function acenderUmaVez() { if (!acesa) { acesa = true; acender(); } }
-    if (primeira && !primeira.complete) {
-      primeira.addEventListener('load', acenderUmaVez);
-      primeira.addEventListener('error', acenderUmaVez);
-      setTimeout(acenderUmaVez, 600);
-    } else {
-      acenderUmaVez();
-    }
   })();
   </script>
 </body>

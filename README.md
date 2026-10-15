@@ -26,11 +26,13 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | `3d/produtos.py` | Veste os manequins com as roupas de cada parada e modela as malas e a garrafa. |
 | `3d/gerar_manequins.py` | Gera os manequins feminino e masculino a partir do MakeHuman (MPFB 2, CC0). |
 | `3d/modelos/` | Manequins prontos em `.glb`, com as regiões do corpo marcadas em cada vértice. |
-| `3d/renderizar_todas.sh` | Renderiza as 8 paradas e gera os recortes. |
-| `3d/recortes.py` | Recorta o render nos formatos de computador (16:9) e celular (9:16). |
+| `3d/renderizar_todas.sh` | Renderiza as 8 paradas e gera as imagens da página. |
+| `3d/exportar_midia.py` | Converte os renders das paradas nas imagens WebP da página (`midia/paradas/`). |
+| `3d/renderizar_transicoes.sh` | Renderiza o travelling de câmera entre paradas vizinhas e gera os vídeos (`midia/transicoes/`). |
 | `3d/baixar_texturas.sh` | Baixa as texturas de madeira (CC0, Poly Haven) para `3d/texturas/`, que fica fora do Git. |
 | `3d/fontes/` | Fonte Outfit do letreiro (licença SIL OFL em `OFL.txt`). |
-| `3d/renders/` | Renders aprovados ou em aprovação, com os recortes `.webp`. |
+| `3d/renders/` | Renders originais das paradas (PNG 1600x1200). |
+| `midia/` | Imagens e vídeos que a página carrega, servidos pelo jsDelivr (veja [Mídias da página](#mídias-da-página)). |
 | `docs/` | Conceito visual (`conceito/storyboard.html`) e prévias da página. |
 
 ## Editar os links
@@ -45,9 +47,7 @@ Os links ficam na planilha, não no código. A mudança aparece no Hub em até 1
 | Categoria | Linha pequena acima do nome. |
 | Descrição | Uma frase sobre o destino. |
 | URL | Endereço completo, começando com `https://`. Outros formatos são ignorados. |
-| Produto | Nome do produto exposto (referência para os renders 3D). |
-| Expositor | `Manequim` para roupas, `Cubo` para malas e acessórios. |
-| Imagem | Foto do produto. Fotos do site tf.com.br são redimensionadas automaticamente. |
+| Produto | Produto da vitrine 3D que representa o link (lista na própria coluna). Se ficar vazio ou não for um dos 8, o link usa a parada da mesma posição. |
 
 ## Desenvolvimento
 
@@ -55,7 +55,7 @@ Os links ficam na planilha, não no código. A mudança aparece no Hub em até 1
 2. Para ver a página sem publicar, abra `src/Index.html` no navegador. Fora do Apps Script ela usa os 8 links de exemplo que estão no próprio arquivo.
 3. Faça a mudança, atualize a documentação (veja abaixo) e faça o commit na `main`.
 
-Navegação da página: setas na tela, teclado (← →, Home, End, 1 a 9, Enter abre o link atual), roda do mouse, arrastar com o mouse ou deslizar o dedo, e a barra com todos os links.
+Navegação da página: setas na tela, teclado (← →, Home, End, 1 a 9, Enter abre o link atual), roda do mouse, arrastar com o mouse ou deslizar o dedo, e a barra com todos os links. Entre produtos vizinhos na vitrine a câmera faz o travelling em vídeo; em saltos maiores, ou com "reduzir movimento" ligado no aparelho, a imagem troca com um fade.
 
 ## Publicação
 
@@ -113,7 +113,9 @@ A loja é montada inteira por código em `3d/vitrine.py`, com o Blender como mó
 
 Para trocar o produto de uma parada, mude `PARADAS` em `vitrine.py` e, se for um produto novo, crie a função dele em `produtos.py`.
 
-A câmera fica do lado de fora, sem inclinação (as verticais ficam retas), com o produto em 65% da largura. Nos manequins ela mostra o corpo inteiro; nos cubos usa uma lente mais longa, na altura do produto. O render sai em 4:3 e é recortado em 16:9 para o computador e em 9:16, centrado no produto, para o celular.
+A câmera fica do lado de fora, sem inclinação (as verticais ficam retas), com o produto em 65% da largura. Nos manequins ela mostra o corpo inteiro; nos cubos usa uma lente mais longa, na altura do produto. O render sai em 4:3; a página recorta para a tela (no computador a vitrine é no máximo 1,8 vez mais larga que alta, para não cortar cabeças; no celular o recorte é vertical, centrado no produto).
+
+**Transições.** Para cada par de paradas vizinhas, `vitrine.py --transicao` anima a câmera de uma até a outra (aceleração e frenagem suaves; a lente muda pelo ângulo de visão). São 12 quadros em 960x720, interpolados para 24 quadros por segundo pelo ffmpeg: 1 segundo de travelling. Cada transição tem o vídeo de ida e o de volta (o mesmo, invertido).
 
 ### Renderizar
 
@@ -122,9 +124,23 @@ python3 -m venv .venv-blender && .venv-blender/bin/pip install bpy==5.2.2 pillow
 sh 3d/baixar_texturas.sh
 .venv-blender/bin/python 3d/vitrine.py --parada 0 --previa                    # 480x360, ~20 s
 .venv-blender/bin/python 3d/vitrine.py --parada 0 --amostras 160              # 1600x1200, ~15 min em CPU de 4 núcleos
-.venv-blender/bin/python 3d/recortes.py 3d/renders/parada-0.png
-sh 3d/renderizar_todas.sh 96                                                  # as 8 paradas, ~12 min cada
+sh 3d/renderizar_todas.sh 96          # as 8 paradas (~12 min cada) e as imagens de midia/paradas/
+sh 3d/renderizar_transicoes.sh        # as 7 transições (~10 min cada) e os vídeos de midia/transicoes/
 ```
+
+### Mídias da página
+
+A página carrega as imagens e os vídeos de `midia/` pelo jsDelivr, a partir de uma tag fixa do repositório (por isso o repositório é público): `https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@midia-v1/midia/`. Uma tag nunca muda, então o cache da CDN não atrapalha. Para trocar as mídias:
+
+1. Gere os arquivos novos em `midia/` e faça o commit.
+2. Crie a próxima tag (`git tag midia-v2 && git push origin midia-v2`).
+3. Troque `midia-v1` por `midia-v2` na constante `MIDIA` de `src/Index.html` e publique.
+
+| Arquivo | Uso |
+|---|---|
+| `midia/paradas/parada-N.webp` | Imagem da parada N (0 a 7), 1600x1200, 20 a 35 KB |
+| `midia/transicoes/transicao-N-ida.mp4` | Travelling da parada N até a N+1 |
+| `midia/transicoes/transicao-N-volta.mp4` | O mesmo, de volta |
 
 Opções de `vitrine.py`: `--parada` (0 a 7), `--largura`, `--altura`, `--amostras`, `--previa`, `--saida` e `--blend` (salva o arquivo `.blend` para abrir no Blender).
 
@@ -134,8 +150,7 @@ Opções de `vitrine.py`: `--parada` (0 a 7), `--largura`, `--altura`, `--amostr
 |---|---|---|
 | 1 | Planilha, Apps Script e vitrine com fotos do site | Concluída |
 | 2 | Cenário da loja no Blender e render de teste de uma parada | Cenário aprovado |
-| 3 (parte) | Manequins realistas e produtos de todas as paradas | Renders aguardando aprovação |
-| 3 | Renders na página, transições em vídeo entre as paradas | A fazer |
+| 3 | Manequins e produtos em 3D, renders na página e transições em vídeo | Concluída |
 | 4 | Acabamento, testes em celular e computador | A fazer |
 
 ## Créditos
@@ -148,7 +163,6 @@ Opções de `vitrine.py`: `--parada` (0 a 7), `--largura`, `--altura`, `--amostr
 
 - Qualquer pessoa com a URL vê a lista de links. Não coloque senhas nem links com token na planilha.
 - Por ser uma conta pessoal, o Google mostra uma faixa no topo da página dizendo que o app foi criado por um usuário. Não dá para remover.
-- As fotos vêm do site tf.com.br e serão trocadas pelos renders 3D na fase 3.
 
 ## Documentação
 

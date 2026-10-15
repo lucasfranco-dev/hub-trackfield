@@ -7,3 +7,4 @@ node_modules/
 .venv-blender
 __pycache__/
 3d/renders/*.log
+.previa.html
