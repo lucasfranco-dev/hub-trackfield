@@ -27,6 +27,9 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | `3d/gerar_manequins.py` | Gera os manequins feminino e masculino a partir do MakeHuman (MPFB 2, CC0). |
 | `3d/modelos/` | Manequins prontos em `.glb`, com as regiões do corpo marcadas em cada vértice. |
 | `3d/renderizar_todas.sh` | Renderiza as 8 paradas e gera as imagens da página. |
+| `3d/renderizar_maxima.sh` | Renderiza tudo em qualidade máxima, para um computador com placa de vídeo. |
+| `3d/verificar.sh` | Confere se o computador está pronto para renderizar (Python, Pillow, ffmpeg, texturas, GPU). |
+| `3d/ambiente.sh` | Configuração comum dos scripts: acha o Python do venv no Linux, Mac e Windows. |
 | `3d/exportar_midia.py` | Converte os renders das paradas nas imagens WebP da página (`midia/paradas/`). |
 | `3d/renderizar_transicoes.sh` | Renderiza o travelling de câmera entre paradas vizinhas e gera os vídeos (`midia/transicoes/`). |
 | `3d/baixar_texturas.sh` | Baixa as texturas de madeira (CC0, Poly Haven) para `3d/texturas/`, que fica fora do Git. |
@@ -87,7 +90,7 @@ A loja é montada inteira por código em `3d/vitrine.py`, com o Blender como mó
 
 - fachada com ripado de madeira e letreiro iluminado na fonte Outfit;
 - vidro contínuo com reflexos das luminárias do corredor;
-- piso de madeira, parede branca com o logo em relevo e fachos de luz dos spots;
+- piso de madeira, parede branca e fachos de luz dos spots (o logo em relevo na parede existe, mas está desligado em `LOGO_EM_RELEVO`: ficava atrás do nome do link na página);
 - 8 paradas na ordem da planilha: manequins vestidos com os produtos e cubos de madeira com malas e garrafa.
 
 ![As 8 paradas da vitrine 3D](docs/previa/vitrine-3d-paradas.jpg)
@@ -130,9 +133,9 @@ sh 3d/renderizar_transicoes.sh        # as 7 transições (~12 min cada) e os v�
 
 ### Renderizar em outro computador
 
-Tudo o que a cena precisa está no repositório; só as texturas são baixadas. Num computador com placa de vídeo o render fica muitas vezes mais rápido.
+Tudo o que a cena precisa está no repositório; só as texturas são baixadas. Num computador com placa de vídeo o render fica muitas vezes mais rápido. Para fazer isso com o Claude no próprio PC, siga [docs/render-no-pc.md](docs/render-no-pc.md): lá estão o que instalar e o pedido pronto para colar no chat.
 
-1. Instale Python 3.13, `ffmpeg` (só para as transições) e Git. No Windows, rode os scripts `.sh` no Git Bash ou no WSL.
+1. Instale Python 3.13, `ffmpeg` (só para as transições), Git e Node.js (só para publicar). No Windows, rode os scripts `.sh` no Git Bash (vem com o Git para Windows).
 2. Clone e prepare:
 
    ```sh
@@ -140,17 +143,25 @@ Tudo o que a cena precisa está no repositório; só as texturas são baixadas. 
    python -m venv .venv-blender
    .venv-blender/bin/pip install bpy==5.2.2 pillow       # no Windows: .venv-blender/Scripts/pip
    sh 3d/baixar_texturas.sh
+   sh 3d/verificar.sh                                    # confere tudo, inclusive a placa de vídeo
    ```
 
-3. Renderize na placa de vídeo com `DISPOSITIVO=GPU` (detecta OptiX/CUDA da NVIDIA, HIP da AMD, Metal do Mac ou oneAPI da Intel; sem GPU compatível, volta para a CPU):
+   Os scripts acham sozinhos o Python do venv no Linux, no Mac (`.venv-blender/bin/python`) e no Windows (`.venv-blender/Scripts/python.exe`); para usar outro, defina `PYTHON_BLENDER`.
+
+3. Renderize na placa de vídeo. `DISPOSITIVO=GPU` detecta OptiX/CUDA da NVIDIA, HIP da AMD, Metal do Mac ou oneAPI da Intel; sem GPU compatível, volta para a CPU.
 
    ```sh
    DISPOSITIVO=GPU .venv-blender/bin/python 3d/vitrine.py --parada 0 --previa   # teste rápido
-   DISPOSITIVO=GPU sh 3d/renderizar_todas.sh 256                                # paradas com mais amostras
-   DISPOSITIVO=GPU sh 3d/renderizar_transicoes.sh                               # transições
+   sh 3d/renderizar_maxima.sh                                                   # tudo em qualidade máxima
    ```
 
-   No Windows, se o venv ficou em `.venv-blender/Scripts/python.exe`, defina `PYTHON_BLENDER=.venv-blender/Scripts/python.exe` antes dos scripts. Também dá para usar o Blender 5.2 instalado, sem venv: `blender -b --python 3d/vitrine.py -- --parada 0 --dispositivo GPU`.
+   | Script | O que faz |
+   |---|---|
+   | `3d/renderizar_maxima.sh` | Qualidade máxima na GPU: 8 paradas em 2400x1800 com 512 amostras e 7 transições em 1600x1200 com 128 amostras e desfoque de movimento. Aceita `paradas` ou `transicoes` para fazer só uma parte. Leva de 30 min a 2 h, conforme a placa. |
+   | `3d/renderizar_todas.sh [amostras]` | Só as paradas; tamanho em `LARGURA` e `ALTURA` (padrão 1600x1200). |
+   | `3d/renderizar_transicoes.sh [primeira] [última]` | Só as transições; `LARGURA`, `ALTURA`, `AMOSTRAS` e `DESFOQUE=1` para mudar o padrão (960x720, 12 amostras, sem desfoque). |
+
+   As imagens da página saem com no máximo 1920 px de largura, mesmo que o render seja maior. Também dá para usar o Blender 5.2 instalado, sem venv: `blender -b --python 3d/vitrine.py -- --parada 0 --dispositivo GPU`.
 
 4. Faça o commit de `3d/renders/` e `midia/` e siga os passos de [Mídias da página](#mídias-da-página) para publicar.
 

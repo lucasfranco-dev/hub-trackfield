@@ -4,6 +4,16 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 
 ## [Não publicado]
 
+### Adicionado
+- `3d/renderizar_maxima.sh`: toda a vitrine em qualidade máxima na placa de vídeo (paradas em 2400x1800 com 512 amostras, transições em 1600x1200 com 128 amostras e desfoque de movimento).
+- `3d/verificar.sh`: confere Python, Pillow, ffmpeg, texturas e placa de vídeo antes de renderizar.
+- `docs/render-no-pc.md`: o que instalar no PC e o pedido pronto para o Claude local renderizar e publicar.
+
+### Alterado
+- Os scripts de render acham o Python do venv também no Windows (`3d/ambiente.sh`) e aceitam tamanho, amostras e desfoque por variáveis (`LARGURA`, `ALTURA`, `AMOSTRAS`, `DESFOQUE`).
+- `exportar_midia.py` limita as imagens da página a 1920 px de largura.
+- O logo em relevo da parede foi desligado (`LOGO_EM_RELEVO` em `vitrine.py`): ficava atrás do nome do link. Vale a partir do próximo render.
+
 ## [2.0.0] - 2026-10-15
 
 ### Adicionado

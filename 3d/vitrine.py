@@ -49,6 +49,10 @@ FIM_X = (len(PARADAS) - 1) * ESPACO_PARADAS + 3.5
 
 LUZ_QUENTE = (1.0, 0.83, 0.64)
 
+# Logo "Track&Field" em relevo na parede do fundo. Desligado: na página ele ficava atrás do
+# nome do link (no celular, principalmente). O letreiro da fachada já mostra a marca.
+LOGO_EM_RELEVO = False
+
 
 # ---------------------------------------------------------------- utilidades
 
@@ -222,12 +226,13 @@ def montar_cenario(mats):
     bpy.ops.uv.cube_project(cube_size=1.6)
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    # Parede do fundo com o logo em relevo, teto e laterais.
+    # Parede do fundo (com o logo em relevo, se ligado), teto e rodapé.
     caixa("Parede", (meio_x, FUNDO_Y + 0.05, TETO_Z / 2), (largura, 0.1, TETO_Z), mats["parede"])
     caixa("Teto", (meio_x, FUNDO_Y / 2, TETO_Z + 0.05), (largura, FUNDO_Y + 0.2, 0.1), mats["parede"])
     caixa("Rodapé", (meio_x, FUNDO_Y - 0.01, PISO_VITRINE + 0.04), (largura, 0.02, 0.08), mats["parede"])
-    for i in range(0, len(PARADAS), 3):
-        relevo_logo(i * ESPACO_PARADAS - 0.9, mats)
+    if LOGO_EM_RELEVO:
+        for i in range(0, len(PARADAS), 3):
+            relevo_logo(i * ESPACO_PARADAS - 0.9, mats)
 
     # Spots embutidos no teto e luz de destaque em cada parada.
     for i in range(len(PARADAS)):
