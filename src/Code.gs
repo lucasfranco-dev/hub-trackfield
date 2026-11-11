@@ -107,3 +107,117 @@ function jsonSeguro_(valor) {
     .replace(/\u2028/g, '\\u2028')
     .replace(/\u2029/g, '\\u2029');
 }
+
+// ---------------------------------------------------------------- consulta de produtos
+
+const SITE_TF = 'https://www.tf.com.br';
+const CONSULTA_CACHE_SEGUNDOS = 600;
+const CONSULTA_MAX_RESULTADOS = 12;
+
+/**
+ * Consulta de produtos da lupa do Hub (chamada pela página com google.script.run).
+ * Aceita EAN (só números), código TF (com ou sem a cor, ex.: TF041024 ou TF041024-0003)
+ * ou parte do nome. Usa a busca do site tf.com.br, que a página não pode chamar direto
+ * (o navegador bloqueia por CORS), e devolve só o que a tela mostra.
+ */
+function buscarProduto(consulta) {
+  const termo = String(consulta || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (termo.length < 2) throw new Error('Digite pelo menos 2 caracteres.');
+  const ean = /^\d{8,14}$/.test(termo) ? termo : null;
+
+  const cache = CacheService.getScriptCache();
+  const chave = 'produto:' + termo.toLowerCase();
+  const salvo = cache.get(chave);
+  if (salvo) return JSON.parse(salvo);
+
+  let produtos = buscarNoSite_('/api/io/_v/api/intelligent-search/product_search/?count=' + CONSULTA_MAX_RESULTADOS +
+                               '&query=' + encodeURIComponent(termo), 'products');
+  if (ean) {
+    // A busca do site é aproximada; para EAN vale só o produto que tem exatamente esse código.
+    produtos = produtos.filter((p) => (p.items || []).some((i) => i.ean === ean));
+    if (!produtos.length) {
+      produtos = buscarNoSite_('/api/catalog_system/pub/products/search?fq=alternateIds_Ean:' + ean, null);
+    }
+  }
+  const resultado = {
+    consulta: termo,
+    produtos: produtos.map((p) => resumirProduto_(p, ean)).filter(Boolean).slice(0, CONSULTA_MAX_RESULTADOS),
+  };
+  cache.put(chave, JSON.stringify(resultado), CONSULTA_CACHE_SEGUNDOS);
+  return resultado;
+}
+
+function buscarNoSite_(caminho, campo) {
+  const resposta = UrlFetchApp.fetch(SITE_TF + caminho, {
+    muteHttpExceptions: true,
+    headers: { Accept: 'application/json' },
+  });
+  if (resposta.getResponseCode() !== 200) {
+    throw new Error('O site da TF não respondeu agora. Tente de novo em instantes.');
+  }
+  const dados = JSON.parse(resposta.getContentText());
+  return (campo ? dados[campo] : dados) || [];
+}
+
+/** Reduz um produto do site ao que a consulta mostra. Com EAN, usa o tamanho daquele código. */
+function resumirProduto_(produto, ean) {
+  const itens = produto.items || [];
+  const oferta = (item) => ((item.sellers || [])[0] || {}).commertialOffer || {};
+  const item = ean
+    ? itens.find((i) => i.ean === ean)
+    : itens.find((i) => oferta(i).AvailableQuantity > 0) || itens[0];
+  if (!item) return null;
+
+  const ref = texto_(produto.productReference);
+  const partes = /^(.+)-(\d{3,4})$/.exec(ref);
+  const imagem = texto_(((item.images || [])[0] || {}).imageUrl)
+    .replace(/(\/arquivos\/ids\/\d+)(-\d+-\d+)?\/.*/, '$1-400-559');
+  const link = texto_(produto.link);
+  const precos = produto.priceRange || {};
+  let preco = Number(oferta(item).Price) || 0;
+  let precoCheio = Number(oferta(item).ListPrice) || 0;
+  if (!preco && precos.sellingPrice) {
+    preco = precos.sellingPrice.lowPrice || 0;
+    precoCheio = (precos.listPrice || {}).lowPrice || preco;
+  }
+
+  return {
+    nome: texto_(produto.productName),
+    referencia: ref,
+    modelo: partes ? partes[1] : ref,
+    corCodigo: partes ? partes[2] : '',
+    corNome: tituloCor_(nomeDaCor_(item)),
+    corHex: variacao_(item, 'COR HEX'),
+    tamanho: ean ? variacao_(item, 'TAMANHO') : '',
+    ean: texto_(item.ean),
+    imagem: /^https:\/\/trackfield\.vtexassets\.com\//.test(imagem) ? imagem : '',
+    link: /^https?:\/\//.test(link) ? link : SITE_TF + link,
+    preco: preco,
+    precoCheio: Math.max(precoCheio, preco),
+    disponivel: itens.some((i) => oferta(i).AvailableQuantity > 0),
+  };
+}
+
+// O nome do item no site é "Cor - Tamanho" (ex.: "Azul Noturno - UNICO"): a cor exata da TF.
+// "CORES E ESTAMPAS" traz só a cor genérica (ex.: "AZUL") e fica como reserva.
+function nomeDaCor_(item) {
+  const tamanho = variacao_(item, 'TAMANHO');
+  const nome = texto_(item.name);
+  if (tamanho && nome.endsWith(' - ' + tamanho)) return nome.slice(0, -(' - ' + tamanho).length);
+  return variacao_(item, 'CORES E ESTAMPAS') || nome;
+}
+
+function variacao_(item, nome) {
+  const valor = item[nome] || ((item.variations || []).find((v) => v.name === nome) || {}).values;
+  return texto_(Array.isArray(valor) ? valor[0] : valor);
+}
+
+function tituloCor_(cor) {
+  return cor.toLowerCase().replace(/(^|[\s/-])(\p{L})/gu, (_, sep, letra) => sep + letra.toUpperCase());
+}
+
+/** Rode uma vez no editor do Apps Script para autorizar a consulta ao site da TF. */
+function autorizarConsulta() {
+  const r = buscarProduto('7909563108891');
+  Logger.log('Consulta autorizada: ' + (r.produtos[0] ? r.produtos[0].nome : 'sem resultado'));
+}

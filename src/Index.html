@@ -411,6 +411,166 @@
       font-variant-numeric: tabular-nums;
     }
 
+
+    /* Lupa: consulta de produtos (EAN, código TF ou nome) */
+    .lupa {
+      position: absolute;
+      left: clamp(14px, 3vw, 40px);
+      top: 50%;
+      width: 48px;
+      height: 48px;
+      margin-top: -24px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: rgb(255 255 255 / .14);
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / .38), 0 6px 16px -8px rgb(0 0 0 / .5);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      cursor: pointer;
+      transition: background-color .2s ease, transform .15s ease;
+    }
+    .lupa svg { width: 22px; height: 22px; }
+    .lupa:active { transform: scale(.94); }
+    .lupa:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    @media (hover: hover) { .lupa:hover { background: rgb(255 255 255 / .26); } }
+
+    .consulta {
+      width: min(560px, calc(100vw - 24px));
+      max-height: min(86dvh, 820px);
+      padding: 0;
+      border: 0;
+      border-radius: 22px;
+      background: #faf8f4;
+      color: var(--noturno);
+      font-family: var(--fonte);
+      box-shadow: 0 30px 80px -30px rgb(20 16 12 / .6);
+      overflow: hidden;
+    }
+    .consulta[open] { display: flex; animation: consulta-entra .22s var(--saida); }
+    .consulta::backdrop { background: rgb(28 22 17 / .45); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+    @keyframes consulta-entra { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+    .consulta-caixa {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-height: 0;
+      padding: 22px 22px 0;
+    }
+    .consulta-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .consulta-topo h2 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -.01em; }
+    .fechar {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--noturno-suave);
+      cursor: pointer;
+    }
+    .fechar svg { width: 18px; height: 18px; }
+    .fechar:focus-visible { outline: 2px solid var(--noturno); }
+    @media (hover: hover) { .fechar:hover { background: rgb(31 39 64 / .07); } }
+    .consulta-ajuda { margin: 4px 0 16px; font-size: 14px; color: var(--noturno-suave); }
+    .consulta-form { display: flex; gap: 8px; }
+    .consulta-form input {
+      flex: 1;
+      min-width: 0;
+      min-height: 50px;
+      padding: 0 16px;
+      border: 1px solid #d8d2c8;
+      border-radius: 14px;
+      background: #fff;
+      color: var(--noturno);
+      font: 400 17px var(--fonte);
+    }
+    .consulta-form input:focus { outline: 2px solid var(--noturno); outline-offset: -1px; border-color: transparent; }
+    .botao {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 50px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 14px;
+      font: 500 16px var(--fonte);
+      cursor: pointer;
+      transition: background-color .2s ease, transform .15s ease;
+    }
+    .botao:active { transform: scale(.97); }
+    .botao:focus-visible { outline: 2px solid var(--noturno); outline-offset: 2px; }
+    .botao svg { width: 20px; height: 20px; }
+    .botao.primario { background: var(--noturno); color: #fff; }
+    .botao.secundario { width: 100%; margin-top: 10px; background: rgb(31 39 64 / .07); color: var(--noturno); }
+    @media (hover: hover) {
+      .botao.primario:hover { background: #2d3758; }
+      .botao.secundario:hover { background: rgb(31 39 64 / .12); }
+    }
+    .consulta-status { min-height: 20px; margin: 14px 0 6px; font-size: 14px; color: var(--noturno-suave); }
+    .consulta-status.erro { color: #a3352b; }
+    .resultados {
+      flex: 1;
+      min-height: 0;
+      margin: 0 -22px;
+      padding: 0 22px 22px;
+      overflow-y: auto;
+      list-style: none;
+      overscroll-behavior: contain;
+    }
+    .produto-consulta {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid #e7e2da;
+    }
+    .produto-consulta:first-child { border-top: 0; }
+    .produto-consulta img {
+      width: 96px;
+      aspect-ratio: 400 / 559;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #eceeed;
+    }
+    .produto-consulta h3 { margin: 0; font-size: 17px; font-weight: 500; line-height: 1.25; }
+    .ficha { margin: 6px 0 0; font-size: 14px; line-height: 1.5; color: var(--noturno-suave); font-variant-numeric: tabular-nums; }
+    .cor { display: inline-flex; align-items: center; gap: 6px; }
+    .amostra-cor { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .18); }
+    .precos { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+    .preco { font-size: 20px; font-weight: 600; }
+    .preco-cheio { font-size: 15px; color: var(--noturno-suave); }
+    .preco-cheio s { text-decoration-thickness: 1px; }
+    .selo {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e9f3ec;
+      color: #1f6b3a;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .selo.esgotado { background: #f4e9e7; color: #8a3a30; }
+    .ver-site { display: inline-block; margin-top: 8px; font-size: 14px; color: var(--noturno); }
+
+    @media (max-width: 720px) {
+      .consulta {
+        width: 100vw;
+        max-width: 100vw;
+        max-height: 92dvh;
+        margin: auto 0 0;
+        border-radius: 22px 22px 0 0;
+      }
+      .consulta[open] { animation-name: consulta-sobe; }
+      .consulta-caixa { padding: 18px 16px 0; }
+      .resultados { margin: 0 -16px; padding: 0 16px calc(16px + env(safe-area-inset-bottom)); }
+      .consulta-form .botao.primario { padding: 0 16px; }
+    }
+    @keyframes consulta-sobe { from { transform: translateY(40px); opacity: .6; } }
+
     /* Celular: a vitrine ocupa a largura; o render é recortado em volta do produto. */
     @media (max-width: 720px) {
       .fachada { justify-content: center; }
@@ -455,7 +615,8 @@
 
     @media (prefers-reduced-motion: reduce) {
       .letreiro, .apagado, .quadro, .faixa, .ambiente::after, .placa, .texto, .texto > *, .abrir,
-      .indice button::after { transition: none !important; }
+      .indice button::after, .lupa, .botao { transition: none !important; }
+      .consulta[open] { animation: none; }
     }
   </style>
 </head>
@@ -466,6 +627,9 @@
     <header class="fachada">
       <h1 class="sr-only">Hub da equipe Track&amp;Field</h1>
       <p class="letreiro" aria-hidden="true">Track&amp;Field</p>
+      <button class="lupa" id="abrirConsulta" type="button" aria-label="Consultar produto" aria-haspopup="dialog" title="Consultar produto (/)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
+      </button>
     </header>
 
     <div class="moldura" id="moldura">
@@ -495,6 +659,30 @@
     </nav>
     <p class="sr-only" aria-live="polite" id="anuncio"></p>
   </div>
+
+  <dialog class="consulta" id="consulta" aria-labelledby="consultaTitulo">
+    <div class="consulta-caixa">
+      <div class="consulta-topo">
+        <h2 id="consultaTitulo">Consultar produto</h2>
+        <button class="fechar" id="fecharConsulta" type="button" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="consulta-ajuda">Busque pelo código de barras (EAN), pelo código TF ou por parte do nome.</p>
+      <form class="consulta-form" id="consultaForm" role="search">
+        <input id="consultaCampo" type="search" name="consulta" autocomplete="off" autocapitalize="characters" spellcheck="false"
+               enterkeyhint="search" placeholder="Ex.: 7909563108891, TF041024 ou jaqueta" aria-label="EAN, código TF ou nome do produto">
+        <button class="botao primario" type="submit">Buscar</button>
+      </form>
+      <button class="botao secundario" id="fotografar" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h3M17 5h3v2M20 17v2h-3M7 19H4v-2M8 8v8M11 8v8M13.5 8v8M16 8v8"/></svg>
+        Fotografar código de barras
+      </button>
+      <input id="fotoCodigo" type="file" accept="image/*" capture="environment" hidden>
+      <p class="consulta-status" id="consultaStatus" role="status" aria-live="polite"></p>
+      <ul class="resultados" id="resultados"></ul>
+    </div>
+  </dialog>
 
   <script>
   (function () {
@@ -813,6 +1001,8 @@
 
       document.addEventListener('keydown', function (e) {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
+        // Com a consulta aberta, ou digitando em um campo, as teclas não mexem na vitrine.
+        if (document.querySelector('dialog[open]') || e.target.closest('input, textarea')) return;
         if (e.key === 'ArrowRight') { irPara(atual + 1); e.preventDefault(); }
         else if (e.key === 'ArrowLeft') { irPara(atual - 1); e.preventDefault(); }
         else if (e.key === 'Home') { irPara(0); e.preventDefault(); }
@@ -871,6 +1061,220 @@
     }
 
     montar();
+  })();
+  </script>
+  <script>
+  // Consulta de produtos (lupa). A busca roda no servidor (buscarProduto, em Code.gs), que
+  // consulta o site tf.com.br; a página não pode chamar o site direto por causa do CORS.
+  (function () {
+    'use strict';
+
+    // Leitor de código de barras para navegadores sem BarcodeDetector nativo (iPhone, Firefox).
+    // Mesma biblioteca do sistema de contagem de estoque, baseada no ZXing.
+    var LIB_LEITOR = 'https://cdn.jsdelivr.net/npm/barcode-detector@3.2.3/pure/+esm';
+    var FORMATOS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'];
+    var SITE = 'https://www.tf.com.br/';
+    var IMAGENS = 'https://trackfield.vtexassets.com/';
+
+    // Usado só na pré-visualização local, fora do Apps Script (dados reais do site).
+    var AMOSTRA_CONSULTA = [
+      { nome: 'Camiseta Masculina Manga Curta Sports', referencia: 'TF041024-0003', modelo: 'TF041024', corCodigo: '0003', corNome: 'Preto', corHex: '#000000', tamanho: 'PP', ean: '7909563108891', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/677935-400-559', link: 'https://www.tf.com.br/camiseta-masculina-manga-curta-sports-preto-tf041024/p', preco: 239.9, precoCheio: 239.9, disponivel: true },
+      { nome: 'Garrafa Mix 500ml', referencia: 'TFA210047-2627', modelo: 'TFA210047', corCodigo: '2627', corNome: 'Hibisco', corHex: '#E54D68', tamanho: 'UNICO', ean: '7909563184574', imagem: 'https://trackfield.vtexassets.com/arquivos/ids/312861-400-559', link: 'https://www.tf.com.br/garrafa-termica-mix-500ml-hibisco/p', preco: 129.9, precoCheio: 179.9, disponivel: true }
+    ];
+
+    var $ = function (id) { return document.getElementById(id); };
+    var dialogo = $('consulta'), form = $('consultaForm'), campo = $('consultaCampo');
+    var status = $('consultaStatus'), lista = $('resultados'), foto = $('fotoCodigo');
+    var reais = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    var pedido = 0;
+    var detector = null;
+
+    function el(tag, classe, texto) {
+      var n = document.createElement(tag);
+      if (classe) n.className = classe;
+      if (texto != null) n.textContent = texto;
+      return n;
+    }
+
+    function avisar(texto, erro) {
+      status.textContent = texto;
+      status.classList.toggle('erro', !!erro);
+    }
+
+    function abrir() {
+      if (!dialogo.open) dialogo.showModal();
+      campo.focus();
+      campo.select();
+    }
+
+    // No Apps Script a busca vai ao servidor; fora dele (pré-visualização) usa a amostra.
+    function consultarServidor(termo) {
+      if (window.google && google.script && google.script.run) {
+        return new Promise(function (ok, falha) {
+          google.script.run.withSuccessHandler(ok).withFailureHandler(falha).buscarProduto(termo);
+        });
+      }
+      var t = termo.toLowerCase();
+      return Promise.resolve({ consulta: termo, produtos: AMOSTRA_CONSULTA.filter(function (p) {
+        return (p.nome + ' ' + p.referencia + ' ' + p.ean).toLowerCase().indexOf(t) >= 0;
+      }) });
+    }
+
+    function buscar(termo) {
+      termo = String(termo || '').trim();
+      if (termo.length < 2) { avisar('Digite pelo menos 2 caracteres.', true); campo.focus(); return; }
+      var meu = ++pedido;
+      lista.textContent = '';
+      lista.setAttribute('aria-busy', 'true');
+      avisar('Buscando "' + termo + '" no site da Track&Field…');
+      consultarServidor(termo).then(function (r) {
+        if (meu !== pedido) return;
+        mostrar(r, termo);
+      }, function (e) {
+        if (meu !== pedido) return;
+        avisar((e && e.message) || 'Não foi possível consultar agora. Tente de novo.', true);
+      }).then(function () { if (meu === pedido) lista.removeAttribute('aria-busy'); });
+    }
+
+    function mostrar(r, termo) {
+      var produtos = (r && r.produtos) || [];
+      if (!produtos.length) {
+        avisar('Nada encontrado para "' + termo + '". Confira o código ou tente parte do nome.', true);
+        return;
+      }
+      avisar(produtos.length === 1 ? '1 produto encontrado.' : produtos.length + ' produtos encontrados.');
+      produtos.forEach(function (p) { lista.appendChild(cartao(p)); });
+    }
+
+    function cartao(p) {
+      var li = el('li', 'produto-consulta');
+      var img = el('img');
+      img.alt = p.nome;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      if (String(p.imagem).indexOf(IMAGENS) === 0) img.src = p.imagem;
+      li.appendChild(img);
+
+      var corpo = el('div');
+      corpo.appendChild(el('h3', null, p.nome));
+      var ficha = el('p', 'ficha');
+      ficha.appendChild(document.createTextNode(p.modelo || p.referencia));
+      if (p.corCodigo || p.corNome) {
+        ficha.appendChild(document.createTextNode(' · '));
+        var cor = el('span', 'cor');
+        if (/^#[0-9a-f]{6}$/i.test(p.corHex)) {
+          var amostra = el('span', 'amostra-cor');
+          amostra.style.background = p.corHex;
+          amostra.setAttribute('aria-hidden', 'true');
+          cor.appendChild(amostra);
+        }
+        cor.appendChild(document.createTextNode('Cor ' + [p.corCodigo, p.corNome].filter(Boolean).join(' ')));
+        ficha.appendChild(cor);
+      }
+      // Tamanho e EAN só vêm na busca por código de barras: o EAN é de um tamanho só.
+      if (p.tamanho) {
+        ficha.appendChild(document.createTextNode(' · Tam. ' + (p.tamanho === 'UNICO' ? 'Único' : p.tamanho)));
+        if (p.ean) { ficha.appendChild(el('br')); ficha.appendChild(document.createTextNode('EAN ' + p.ean)); }
+      }
+      corpo.appendChild(ficha);
+
+      var precos = el('div', 'precos');
+      var temDesconto = p.precoCheio - p.preco > 0.009 && p.preco > 0;
+      if (p.preco > 0) precos.appendChild(el('span', 'preco', reais.format(p.preco)));
+      if (temDesconto) {
+        var cheio = el('span', 'preco-cheio');
+        var riscado = el('s', null, reais.format(p.precoCheio));
+        cheio.appendChild(document.createTextNode('de '));
+        cheio.appendChild(riscado);
+        precos.appendChild(cheio);
+        precos.appendChild(el('span', 'selo', '−' + Math.round((1 - p.preco / p.precoCheio) * 100) + '%'));
+      }
+      if (!p.disponivel) precos.appendChild(el('span', 'selo esgotado', 'Esgotado no site'));
+      corpo.appendChild(precos);
+
+      if (String(p.link).indexOf(SITE) === 0) {
+        var a = el('a', 'ver-site', 'Ver no site');
+        a.href = p.link;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        corpo.appendChild(a);
+      }
+      li.appendChild(corpo);
+      return li;
+    }
+
+    // ------------------------------------------------------------ código de barras pela foto
+    // O Apps Script abre a página num iframe sem permissão de câmera ao vivo, então o celular
+    // tira uma foto (input com capture) e a página lê o código da imagem.
+
+    function criarDetector() {
+      if (detector) return detector;
+      detector = (function () {
+        if ('BarcodeDetector' in window) {
+          return window.BarcodeDetector.getSupportedFormats().then(function (suportados) {
+            var formatos = FORMATOS.filter(function (f) { return suportados.indexOf(f) >= 0; });
+            if (formatos.indexOf('ean_13') >= 0) return new window.BarcodeDetector({ formats: formatos });
+            throw new Error('sem EAN');
+          });
+        }
+        return Promise.reject(new Error('sem BarcodeDetector'));
+      })().catch(function () {
+        return import(LIB_LEITOR).then(function (lib) { return new lib.BarcodeDetector({ formats: FORMATOS }); });
+      });
+      detector.catch(function () { detector = null; });
+      return detector;
+    }
+
+    // Fotos de celular são grandes: reduz para no máximo 1600 px antes de procurar o código.
+    function imagemReduzida(arquivo) {
+      return new Promise(function (ok, falha) {
+        var url = URL.createObjectURL(arquivo);
+        var img = new Image();
+        img.onload = function () {
+          var escala = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+          var tela = document.createElement('canvas');
+          tela.width = Math.round(img.naturalWidth * escala);
+          tela.height = Math.round(img.naturalHeight * escala);
+          tela.getContext('2d').drawImage(img, 0, 0, tela.width, tela.height);
+          URL.revokeObjectURL(url);
+          ok(tela);
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); falha(new Error('Não consegui abrir a foto.')); };
+        img.src = url;
+      });
+    }
+
+    function lerFoto(arquivo) {
+      lista.textContent = '';
+      avisar('Lendo o código de barras da foto…');
+      Promise.all([criarDetector(), imagemReduzida(arquivo)]).then(function (r) {
+        return r[0].detect(r[1]);
+      }).then(function (codigos) {
+        var codigo = (codigos || []).map(function (c) { return c.rawValue; })
+          .filter(function (v) { return /^\d{8,14}$/.test(v); })[0] || (codigos[0] && codigos[0].rawValue);
+        if (!codigo) {
+          avisar('Não achei um código de barras na foto. Tire de novo, com o código inteiro, reto e nítido.', true);
+          return;
+        }
+        campo.value = codigo;
+        buscar(codigo);
+      }).catch(function (e) {
+        avisar(e && /foto/.test(e.message) ? e.message : 'Não foi possível ler a foto agora. Digite o código.', true);
+      });
+    }
+
+    // ------------------------------------------------------------ eventos
+
+    $('abrirConsulta').addEventListener('click', abrir);
+    $('fecharConsulta').addEventListener('click', function () { dialogo.close(); });
+    dialogo.addEventListener('click', function (e) { if (e.target === dialogo) dialogo.close(); });
+    form.addEventListener('submit', function (e) { e.preventDefault(); buscar(campo.value); });
+    $('fotografar').addEventListener('click', function () { foto.value = ''; foto.click(); });
+    foto.addEventListener('change', function () { if (foto.files && foto.files[0]) lerFoto(foto.files[0]); });
+    // "/" abre a consulta (fora de campos de texto), como em muitos sites.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/' && !dialogo.open && !e.target.closest('input, textarea')) { e.preventDefault(); abrir(); }
+    });
   })();
   </script>
 </body>

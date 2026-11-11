@@ -15,8 +15,8 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 
 | Caminho | O que é |
 |---|---|
-| `src/Code.gs` | Servidor: lê a aba **Links** da planilha e entrega a página. |
-| `src/Index.html` | A vitrine: visual, animações e navegação, num único arquivo. |
+| `src/Code.gs` | Servidor: lê a aba **Links** da planilha, entrega a página e faz a consulta de produtos no site da TF. |
+| `src/Index.html` | A vitrine (visual, animações e navegação) e a consulta de produtos da lupa, num único arquivo. |
 | `src/appsscript.json` | Manifesto do Apps Script: fuso horário e acesso do app da Web (qualquer pessoa, sem login). |
 | `package.json` | Dependência do clasp e, em `config.deploymentId`, o ID da implantação do app da Web. |
 | `scripts/publicar.sh` | Envia `src/` para o Apps Script e atualiza a implantação. |
@@ -52,13 +52,32 @@ Os links ficam na planilha, não no código. A mudança aparece no Hub em até 1
 | URL | Endereço completo, começando com `https://`. Outros formatos são ignorados. |
 | Produto | Produto da vitrine 3D que representa o link (lista na própria coluna). Se ficar vazio ou não for um dos 8, o link usa a parada da mesma posição. |
 
+## Consulta de produtos
+
+A lupa no canto da fachada (ou a tecla `/`) abre a consulta de produtos. Aceita:
+
+| Busca | Exemplo | Resultado |
+|---|---|---|
+| Código de barras (EAN) | `7909563108891` | O produto e o tamanho daquele código. |
+| Código TF do modelo | `TF041024` | Todas as cores do modelo. |
+| Código TF com a cor | `TF041024-0003` | Só aquela cor. |
+| Parte do nome | `jaqueta winter` | Até 12 produtos parecidos. |
+
+Cada resultado mostra a foto, o nome, o código TF, o número e o nome da cor (ex.: `Cor 0004 Azul Noturno`), o preço e, se houver promoção, o preço cheio riscado e a porcentagem de desconto. "Ver no site" abre a página do produto.
+
+**Código de barras pela câmera.** O botão "Fotografar código de barras" abre a câmera do celular; a página lê o código da foto e busca. Não é leitura ao vivo porque o Apps Script abre a página num iframe sem permissão de câmera (por isso o sistema de contagem de estoque, que lê ao vivo, fica no GitHub Pages). A leitura usa o `BarcodeDetector` do navegador ou, onde ele não existe (iPhone), a mesma biblioteca do sistema de contagem (`barcode-detector@3.2.3`, baseada no ZXing). No computador, digite o código ou use um leitor de código de barras USB/Bluetooth, que funciona como teclado.
+
+**Como funciona.** A página chama `buscarProduto` (em `src/Code.gs`) com `google.script.run`. O servidor consulta a busca do site `tf.com.br` (a mesma do campo de busca da loja; para EAN confere o código exato e, se precisar, usa o catálogo), resume o resultado e guarda cada consulta em cache por 10 minutos. A página não chama o site direto porque o navegador bloqueia (CORS). Os dados vêm do site, não da planilha: preço e disponibilidade são os da loja online.
+
+**Autorização.** A consulta usa a permissão do Google "conectar a um serviço externo" (`UrlFetchApp`). Na primeira publicação com ela, a conta dona do script precisa autorizar uma vez: abra o [projeto no Apps Script](https://script.google.com/d/1g-Re2_3aVLnRRAj_56KY8RO1RIAdNUp-9NhAM2XxMt5NHkWEf-Kkn_2c/edit), escolha a função `autorizarConsulta`, clique em **Executar** e aceite as permissões. Sem isso, o Hub mostra um erro do Google para todo mundo.
+
 ## Desenvolvimento
 
 1. `npm install`
-2. Para ver a página sem publicar, abra `src/Index.html` no navegador. Fora do Apps Script ela usa os 8 links de exemplo que estão no próprio arquivo.
+2. Para ver a página sem publicar, abra `src/Index.html` no navegador. Fora do Apps Script ela usa os 8 links de exemplo que estão no próprio arquivo, e a consulta de produtos responde com dois produtos de exemplo (`AMOSTRA_CONSULTA`).
 3. Faça a mudança, atualize a documentação (veja abaixo) e faça o commit na `main`.
 
-Navegação da página: setas na tela, teclado (← →, Home, End, 1 a 9, Enter abre o link atual), roda do mouse, arrastar com o mouse ou deslizar o dedo, e a barra com todos os links. Entre produtos vizinhos na vitrine a câmera faz o travelling em vídeo; em saltos maiores, ou com "reduzir movimento" ligado no aparelho, a imagem troca com um fade.
+Navegação da página: setas na tela, teclado (← →, Home, End, 1 a 9, Enter abre o link atual, `/` abre a consulta de produtos), roda do mouse, arrastar com o mouse ou deslizar o dedo, e a barra com todos os links. Entre produtos vizinhos na vitrine a câmera faz o travelling em vídeo; em saltos maiores, ou com "reduzir movimento" ligado no aparelho, a imagem troca com um fade.
 
 ## Publicação
 
