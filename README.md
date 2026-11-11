@@ -23,7 +23,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | `scripts/montar-site.sh` | Junta `web/` e `midia/` em `_site/`, o que vai para o GitHub Pages. |
 | `.github/workflows/publicar-site.yml` | Publica o site no GitHub Pages a cada mudança em `web/` ou `midia/` na `main`. |
 | `src/Code.gs` | Servidor de dados: responde em JSON com os links da planilha (`?acao=links`) e a consulta de produtos no site da TF (`?acao=produto&q=...`). |
-| `src/Index.html` | Página do endereço antigo do Hub, servida pelo Apps Script. |
+| `src/Index.html` | Página do endereço antigo do Hub (Apps Script): avisa que o Hub mudou e tem o botão para o endereço novo. |
 | `src/appsscript.json` | Manifesto do Apps Script: fuso horário e acesso do app da Web (qualquer pessoa, sem login). |
 | `package.json` | Dependência do clasp e, em `config.deploymentId`, o ID da implantação do app da Web. |
 | `scripts/publicar.sh` | Envia `src/` para o Apps Script e atualiza a implantação. |

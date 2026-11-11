@@ -1,7 +1,8 @@
 /**
- * Hub da equipe Track&Field
+ * Hub da equipe Track&Field: servidor de dados do site (https://lucasfranco-dev.github.io/hub-trackfield/).
  *
- * Lê os links da aba "Links" desta planilha e serve a página da vitrine.
+ * Responde em JSON com os links da aba "Links" desta planilha e com a consulta de produtos no
+ * site da TF. Sem ?acao, mostra a página que leva ao endereço novo do Hub.
  * Publicar em: Implantar > Nova implantação > App da Web
  *   Executar como: Eu  |  Quem pode acessar: Qualquer pessoa
  */
@@ -28,24 +29,14 @@ const COLUNAS = {
  * Com ?acao=..., responde em JSON para o site do Hub no GitHub Pages:
  *   ?acao=links              -> { links: [...] }
  *   ?acao=produto&q=<busca>  -> { consulta, produtos: [...] }  (EAN, código TF ou nome)
- * Erros voltam como { erro: "mensagem" }. Sem acao, entrega a página do Hub.
+ * Erros voltam como { erro: "mensagem" }. Sem acao, mostra o aviso do endereço novo.
  */
 function doGet(e) {
   const acao = e && e.parameter && e.parameter.acao;
   if (acao) return responderJson_(acao, e.parameter);
-  let dados;
-  try {
-    dados = { links: lerLinks_() };
-  } catch (erro) {
-    dados = { erro: erro.message };
-  }
-
-  const template = HtmlService.createTemplateFromFile('Index');
-  template.dadosJson = jsonSeguro_(dados);
-  return template
-    .evaluate()
+  return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Hub Track&Field')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 function responderJson_(acao, parametros) {
@@ -120,13 +111,6 @@ function texto_(valor) {
   return valor === undefined || valor === null ? '' : String(valor).trim();
 }
 
-// JSON que pode ir dentro de <script> sem fechar a tag por engano.
-function jsonSeguro_(valor) {
-  return JSON.stringify(valor)
-    .replace(/</g, '\\u003c')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
-}
 
 // ---------------------------------------------------------------- consulta de produtos
 
@@ -135,7 +119,7 @@ const CONSULTA_CACHE_SEGUNDOS = 600;
 const CONSULTA_MAX_RESULTADOS = 12;
 
 /**
- * Consulta de produtos da lupa do Hub (chamada pela página com google.script.run).
+ * Consulta de produtos da lupa do Hub (chamada pelo site com ?acao=produto&q=...).
  * Aceita EAN (só números), código TF (com ou sem a cor, ex.: TF041024 ou TF041024-0003)
  * ou parte do nome. Usa a busca do site tf.com.br, que a página não pode chamar direto
  * (o navegador bloqueia por CORS), e devolve só o que a tela mostra.

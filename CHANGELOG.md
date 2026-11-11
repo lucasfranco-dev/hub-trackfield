@@ -5,6 +5,7 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 ## [Não publicado]
 
 ### Adicionado
+- O endereço antigo do Hub (Apps Script) agora mostra "O Hub mudou de endereço" com o botão para o site novo.
 - Site do Hub no GitHub Pages (`web/`, publicado pelo workflow `publicar-site.yml` junto com `midia/`): mesma vitrine, sem a faixa do Google, carregando mais rápido e com a câmera liberada. Os links vêm da API do Apps Script e ficam guardados no aparelho para a vitrine abrir na hora.
 - Lupa com dois modos. Consulta: como antes. Soma: cada código bipado ou digitado entra numa lista com o total, quantidade (− e +), remover com desfazer, limpar com confirmação, economia quando há promoção e a soma guardada no aparelho.
 - Leitor de código de barras ao vivo na lupa (câmera traseira, bipe e vibração; o mesmo código só conta de novo depois de sair da câmera), no lugar da foto do código.
