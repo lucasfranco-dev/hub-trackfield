@@ -5,6 +5,9 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 ## [Não publicado]
 
 ### Adicionado
+- Site do Hub no GitHub Pages (`web/`, publicado pelo workflow `publicar-site.yml` junto com `midia/`): mesma vitrine, sem a faixa do Google, carregando mais rápido e com a câmera liberada. Os links vêm da API do Apps Script e ficam guardados no aparelho para a vitrine abrir na hora.
+- Lupa com dois modos. Consulta: como antes. Soma: cada código bipado ou digitado entra numa lista com o total, quantidade (− e +), remover com desfazer, limpar com confirmação, economia quando há promoção e a soma guardada no aparelho.
+- Leitor de código de barras ao vivo na lupa (câmera traseira, bipe e vibração; o mesmo código só conta de novo depois de sair da câmera), no lugar da foto do código.
 - API em JSON no Apps Script (`?acao=links` e `?acao=produto&q=...`), para o site do Hub no GitHub Pages.
 - Consulta de produtos: a lupa no canto da fachada (ou a tecla `/`) busca no site da TF por EAN, código TF (com ou sem a cor) ou parte do nome, e mostra foto, nome, código TF, número e nome da cor, preço e, em promoção, preço cheio e desconto. O código de barras pode ser lido de uma foto tirada pelo celular. A busca roda em `buscarProduto` (`src/Code.gs`), com cache de 10 minutos; exige autorizar uma vez a permissão de serviço externo (função `autorizarConsulta`).
 - Telas mais largas que a vitrine: as laterais deixam de ser cinza e continuam a cena com o próprio render, espelhado e desfocado, com as bordas da vitrine se dissolvendo nele (também durante as transições).
@@ -14,6 +17,8 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 - `docs/render-no-pc.md`: o que instalar no PC e o pedido pronto para o Claude local renderizar e publicar.
 
 ### Alterado
+- Mídias da vitrine publicadas junto com o site (`midia/`), sem o jsDelivr nem o hash fixo em `MIDIA`.
+- `docs/render-no-pc.md`: depois do render basta commit e push; o site publica as mídias sozinho.
 - Os scripts de render acham o Python do venv também no Windows (`3d/ambiente.sh`) e aceitam tamanho, amostras e desfoque por variáveis (`LARGURA`, `ALTURA`, `AMOSTRAS`, `DESFOQUE`).
 - `exportar_midia.py` limita as imagens da página a 1920 px de largura.
 - O logo em relevo da parede foi desligado (`LOGO_EM_RELEVO` em `vitrine.py`): ficava atrás do nome do link. Vale a partir do próximo render.

@@ -1,0 +1,40 @@
+name: Publicar site no GitHub Pages
+
+# O site do Hub (web/ + midia/) vai para o GitHub Pages a cada mudança na main.
+# Precisa do GitHub Pages ligado com a origem "GitHub Actions" (Settings → Pages).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'midia/**'
+      - 'scripts/montar-site.sh'
+      - '.github/workflows/publicar-site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: publicar-site
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Montar o site
+        run: sh scripts/montar-site.sh
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publicar
+        id: publicacao
+        uses: actions/deploy-pages@v4

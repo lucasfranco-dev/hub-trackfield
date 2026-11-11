@@ -10,7 +10,6 @@ Este guia é para renderizar a vitrine 3D em qualidade máxima num PC com placa 
 | Git para Windows | Baixar e enviar o projeto; traz o Git Bash, que o Claude usa para rodar os scripts | <https://git-scm.com/download/win> |
 | Python 3.13 | Blender como módulo (`bpy`) | <https://www.python.org/downloads/>, marcando "Add python.exe to PATH". Precisa ser 3.13: o `bpy` 5.2.2 só existe para essa versão. |
 | ffmpeg | Gerar os vídeos das transições | No PowerShell: `winget install Gyan.FFmpeg` (feche e abra o terminal depois) |
-| Node.js LTS | Publicar no Apps Script (clasp) | <https://nodejs.org/> |
 | Claude Code | O Claude trabalhando no seu PC | App Claude Desktop (parte de código) ou o comando `claude` num terminal |
 
 ## 2. Abrir o projeto
@@ -36,9 +35,9 @@ Este é o projeto Hub Track&Field. Leia o CLAUDE.md e, no README.md, as seções
 
 3. Render: rode sh 3d/renderizar_maxima.sh em segundo plano e acompanhe até o fim. Se algo falhar, me mostre o erro antes de tentar de novo. No fim, me mostre uma folha com as 8 paradas (midia/paradas) e alguns quadros de uma transição, e diga quanto tempo levou e o tamanho dos arquivos de midia/.
 
-4. Só depois da minha aprovação: faça o commit e o push de 3d/renders e midia/. Depois aponte a constante MIDIA de src/Index.html para o hash completo desse commit, atualize README e CHANGELOG (regra do CLAUDE.md), faça o commit e o push.
+4. Só depois da minha aprovação: atualize README e CHANGELOG (regra do CLAUDE.md) e faça o commit e o push de 3d/renders, midia/ e da documentação. O site publica as mídias novas sozinho no GitHub Pages.
 
-5. Publicar: se este PC ainda não tiver as credenciais do clasp, me peça para rodar npx clasp login no terminal (eu autorizo no navegador com a conta lucfpscs@gmail.com; nunca me peça o conteúdo do arquivo de credenciais). Depois rode npm ci e npm run publicar, abra a URL do Hub (está no README) e confira se as imagens e os vídeos novos aparecem no computador e no celular.
+5. Conferir: acompanhe o workflow "Publicar site no GitHub Pages" na aba Actions até terminar, abra o Hub (https://lucasfranco-dev.github.io/hub-trackfield/) e confira se as imagens e os vídeos novos aparecem no computador e no celular (o GitHub Pages pode levar até 10 minutos para trocar os arquivos em cache).
 ```
 
 ## 4. O que só você pode fazer

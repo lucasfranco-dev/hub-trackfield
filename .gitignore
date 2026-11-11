@@ -8,3 +8,4 @@ node_modules/
 __pycache__/
 3d/renders/*.log
 .previa.html
+_site/

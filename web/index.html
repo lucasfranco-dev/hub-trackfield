@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hub Track&amp;Field</title>
+  <meta name="theme-color" content="#5e3d28">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%238b5e3c'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='15' font-weight='700' fill='white' text-anchor='middle'%3ET%26F%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://script.google.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="lupa.css">
+  <link rel="preload" as="image" href="midia/paradas/parada-0.webp" fetchpriority="high">
+</head>
+<body>
+  <div class="loja" id="loja">
+    <header class="fachada">
+      <h1 class="sr-only">Hub da equipe Track&amp;Field</h1>
+      <p class="letreiro" aria-hidden="true">Track&amp;Field</p>
+      <button class="lupa" id="abrirConsulta" type="button" aria-label="Consultar e somar produtos" aria-haspopup="dialog" title="Consultar e somar produtos (/)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
+      </button>
+    </header>
+
+    <div class="moldura" id="moldura">
+      <div class="ambiente" aria-hidden="true">
+        <div class="faixa"><img alt="" decoding="async"><img alt="" decoding="async"><img alt="" decoding="async"></div>
+        <div class="faixa"><img alt="" decoding="async"><img alt="" decoding="async"><img alt="" decoding="async"></div>
+      </div>
+      <main class="vitrine" id="vitrine" aria-roledescription="carrossel" aria-label="Links da equipe">
+        <img class="quadro fundo" id="quadroA" alt="" draggable="false" decoding="async">
+        <img class="quadro frente saindo" id="quadroB" alt="" draggable="false" decoding="async">
+        <a class="alvo-produto" id="alvoProduto" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true"></a>
+        <div class="adesivo" id="adesivo" role="group" aria-roledescription="link"></div>
+        <div class="apagado" aria-hidden="true"></div>
+        <button class="seta anterior" id="anterior" type="button" aria-label="Link anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <button class="seta proxima" id="proxima" type="button" aria-label="Próximo link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </main>
+    </div>
+
+    <nav class="soleira" aria-label="Todos os links">
+      <p class="soleira-titulo">Hub da equipe</p>
+      <ol class="indice" id="indice"></ol>
+      <p class="contador" id="contador" aria-hidden="true"></p>
+    </nav>
+    <p class="sr-only" aria-live="polite" id="anuncio"></p>
+  </div>
+
+  <dialog class="lupa-painel" id="lupaPainel" aria-label="Consultar e somar produtos">
+    <div class="lupa-caixa">
+      <div class="lupa-topo">
+        <div class="modos" role="tablist" aria-label="Modo da lupa">
+          <button role="tab" id="modoConsulta" type="button" aria-selected="true" aria-controls="painelConsulta">Consulta</button>
+          <button role="tab" id="modoSoma" type="button" aria-selected="false" aria-controls="painelSoma" tabindex="-1">Soma <span class="contagem" id="somaQtd" hidden></span></button>
+        </div>
+        <button class="fechar" id="fecharLupa" type="button" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="camera" id="camera" hidden>
+        <video id="cameraVideo" playsinline muted autoplay aria-label="Imagem da câmera"></video>
+        <div class="mira" aria-hidden="true"></div>
+        <p class="leitura" id="leitura" role="status"></p>
+      </div>
+
+      <form class="lupa-form" id="lupaForm" role="search">
+        <input id="lupaCampo" type="search" name="consulta" autocomplete="off" autocapitalize="characters" spellcheck="false"
+               enterkeyhint="search" placeholder="EAN, código TF ou nome do produto" aria-label="EAN, código TF ou nome do produto">
+        <button class="botao primario" type="submit" id="lupaEnviar">Buscar</button>
+      </form>
+      <button class="botao secundario" id="botaoCamera" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h3M17 5h3v2M20 17v2h-3M7 19H4v-2M8 8v8M11 8v8M13.5 8v8M16 8v8"/></svg> Ler código de barras</button>
+      <p class="lupa-status" id="lupaStatus" role="status" aria-live="polite"></p>
+
+      <div class="painel-lupa" id="painelConsulta" role="tabpanel" aria-labelledby="modoConsulta">
+        <ul class="resultados" id="resultados"></ul>
+      </div>
+      <div class="painel-lupa" id="painelSoma" role="tabpanel" aria-labelledby="modoSoma" hidden>
+        <ul class="soma-busca" id="somaBusca" aria-label="Produtos encontrados"></ul>
+        <p class="soma-vazia" id="somaVazia">Bipe os produtos com a câmera ou um leitor, ou digite o código: cada um entra aqui e o total soma sozinho.</p>
+        <ul class="soma-itens" id="somaItens" aria-label="Produtos na soma"></ul>
+      </div>
+      <footer class="soma-total" id="somaTotal" hidden>
+        <span class="soma-resumo" id="somaResumo"></span>
+        <strong class="soma-valor" id="somaValor" aria-live="polite"></strong>
+        <span class="soma-economia" id="somaEconomia"></span>
+        <button class="link-acao" id="limparSoma" type="button">Limpar soma</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <script src="hub.js"></script>
+  <script src="vitrine.js"></script>
+  <script src="lupa.js"></script>
+</body>
+</html>

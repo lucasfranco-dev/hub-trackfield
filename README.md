@@ -1,10 +1,11 @@
 # Hub da equipe Track&Field
 
-Página de links da equipe com o tema da vitrine da loja. A câmera passa pela vitrine e cada manequim ou cubo leva a um site. Roda no Google Apps Script, sem login, e os links vêm de uma Planilha Google.
+Página de links da equipe com o tema da vitrine da loja. A câmera passa pela vitrine e cada manequim ou cubo leva a um site. A lupa consulta e soma produtos com leitor de código de barras ao vivo. O site fica no GitHub Pages, sem login; os links vêm de uma Planilha Google, lida por um Apps Script que também consulta o site da TF.
 
 | | |
 |---|---|
-| Hub (endereço da equipe) | <https://script.google.com/macros/s/AKfycbxawbOdgqsfsxDmw7Tn0IR1l_76XcU93D5uxSl2q78mPSBlMnPn5A2DqqE8l1pIAR0bbQ/exec> |
+| Hub (endereço da equipe) | <https://lucasfranco-dev.github.io/hub-trackfield/> |
+| Servidor de dados (Apps Script) | <https://script.google.com/macros/s/AKfycbxawbOdgqsfsxDmw7Tn0IR1l_76XcU93D5uxSl2q78mPSBlMnPn5A2DqqE8l1pIAR0bbQ/exec> (endereço antigo do Hub) |
 | Planilha de links | [Hub Track&Field: links](https://docs.google.com/spreadsheets/d/1eSkaq6dsmBnoYOXWYdMJFE7LAEQMngrRszZE_ed4OUE/edit) |
 | Projeto no Apps Script | [abrir no editor](https://script.google.com/d/1g-Re2_3aVLnRRAj_56KY8RO1RIAdNUp-9NhAM2XxMt5NHkWEf-Kkn_2c/edit) |
 | Histórico de mudanças | [CHANGELOG.md](CHANGELOG.md) |
@@ -15,8 +16,14 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 
 | Caminho | O que é |
 |---|---|
-| `src/Code.gs` | Servidor: lê a aba **Links** da planilha, entrega a página, faz a consulta de produtos no site da TF e responde em JSON com `?acao=links` ou `?acao=produto&q=...`. |
-| `src/Index.html` | A vitrine (visual, animações e navegação) e a consulta de produtos da lupa, num único arquivo. |
+| `web/index.html` | O site do Hub: fachada, vitrine e a lupa. |
+| `web/estilo.css`, `web/vitrine.js` | Visual e navegação da vitrine (renders, travelling, links da planilha). |
+| `web/lupa.css`, `web/lupa.js` | A lupa: consulta e soma de produtos com leitor de código de barras ao vivo. |
+| `web/hub.js` | Endereço do servidor de dados (Apps Script) e a função que fala com ele. |
+| `scripts/montar-site.sh` | Junta `web/` e `midia/` em `_site/`, o que vai para o GitHub Pages. |
+| `.github/workflows/publicar-site.yml` | Publica o site no GitHub Pages a cada mudança em `web/` ou `midia/` na `main`. |
+| `src/Code.gs` | Servidor de dados: responde em JSON com os links da planilha (`?acao=links`) e a consulta de produtos no site da TF (`?acao=produto&q=...`). |
+| `src/Index.html` | Página do endereço antigo do Hub, servida pelo Apps Script. |
 | `src/appsscript.json` | Manifesto do Apps Script: fuso horário e acesso do app da Web (qualquer pessoa, sem login). |
 | `package.json` | Dependência do clasp e, em `config.deploymentId`, o ID da implantação do app da Web. |
 | `scripts/publicar.sh` | Envia `src/` para o Apps Script e atualiza a implantação. |
@@ -35,7 +42,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 | `3d/baixar_texturas.sh` | Baixa as texturas de madeira (CC0, Poly Haven) para `3d/texturas/`, que fica fora do Git. |
 | `3d/fontes/` | Fonte Outfit do letreiro (licença SIL OFL em `OFL.txt`). |
 | `3d/renders/` | Renders originais das paradas (PNG 2400x1800, feitos com `3d/renderizar_maxima.sh`). |
-| `midia/` | Imagens e vídeos que a página carrega, servidos pelo jsDelivr (veja [Mídias da página](#mídias-da-página)). |
+| `midia/` | Imagens e vídeos da vitrine, publicados junto com o site (veja [Mídias da página](#mídias-da-página)). |
 | `docs/` | Conceito visual (`conceito/storyboard.html`) e prévias da página. |
 
 ## Editar os links
@@ -52,9 +59,11 @@ Os links ficam na planilha, não no código. A mudança aparece no Hub em até 1
 | URL | Endereço completo, começando com `https://`. Outros formatos são ignorados. |
 | Produto | Produto da vitrine 3D que representa o link (lista na própria coluna). Se ficar vazio ou não for um dos 8, o link usa a parada da mesma posição. |
 
-## Consulta de produtos
+## Lupa: consulta e soma de produtos
 
-A lupa no canto da fachada (ou a tecla `/`) abre a consulta de produtos. Aceita:
+A lupa no canto da fachada (ou a tecla `/`) abre um painel com dois modos, que se alternam pelas abas no topo. O modo escolhido fica guardado no aparelho.
+
+**Consulta.** Busca por:
 
 | Busca | Exemplo | Resultado |
 |---|---|---|
@@ -65,25 +74,45 @@ A lupa no canto da fachada (ou a tecla `/`) abre a consulta de produtos. Aceita:
 
 Cada resultado mostra a foto, o nome, o código TF, o número e o nome da cor (ex.: `Cor 0004 Azul Noturno`), o preço e, se houver promoção, o preço cheio riscado e a porcentagem de desconto. "Ver no site" abre a página do produto.
 
-**Código de barras pela câmera.** O botão "Fotografar código de barras" abre a câmera do celular; a página lê o código da foto e busca. Não é leitura ao vivo porque o Apps Script abre a página num iframe sem permissão de câmera (por isso o sistema de contagem de estoque, que lê ao vivo, fica no GitHub Pages). A leitura usa o `BarcodeDetector` do navegador ou, onde ele não existe (iPhone), a mesma biblioteca do sistema de contagem (`barcode-detector@3.2.3`, baseada no ZXing). No computador, digite o código ou use um leitor de código de barras USB/Bluetooth, que funciona como teclado.
+**Soma.** Cada código bipado (ou digitado) entra numa lista e o total soma sozinho:
 
-**Como funciona.** A página chama `buscarProduto` (em `src/Code.gs`) com `google.script.run`. O servidor consulta a busca do site `tf.com.br` (a mesma do campo de busca da loja; para EAN confere o código exato e, se precisar, usa o catálogo), resume o resultado e guarda cada consulta em cache por 10 minutos. A página não chama o site direto porque o navegador bloqueia (CORS). Os dados vêm do site, não da planilha: preço e disponibilidade são os da loja online.
+- o mesmo EAN de novo aumenta a quantidade; os botões − e + também;
+- no − com 1 unidade (lixeira) ou em "Remover", o item sai, com **Desfazer**;
+- busca por TF ou nome mostra os produtos com **Adicionar à soma** (sem tamanho, porque o tamanho vem do EAN);
+- o rodapé mostra quantos itens, o total e, se houver promoção, quanto seria sem desconto e a economia;
+- **Limpar soma** pede um segundo toque para confirmar;
+- a soma fica guardada no aparelho (recarregar a página não perde) e a aba Soma mostra quantos itens tem.
 
-**Autorização.** A consulta usa a permissão do Google "conectar a um serviço externo" (`UrlFetchApp`). Na primeira publicação com ela, a conta dona do script precisa autorizar uma vez: abra o [projeto no Apps Script](https://script.google.com/d/1g-Re2_3aVLnRRAj_56KY8RO1RIAdNUp-9NhAM2XxMt5NHkWEf-Kkn_2c/edit), escolha a função `autorizarConsulta`, clique em **Executar** e aceite as permissões. Sem isso, o Hub mostra um erro do Google para todo mundo.
+**Leitor ao vivo.** "Ler código de barras" liga a câmera traseira e lê uns 8 quadros por segundo, com bipe e vibração a cada leitura. O mesmo código só conta de novo depois de sair da câmera por 1,2 s, para a etiqueta parada na frente não somar várias vezes. Usa o `BarcodeDetector` do navegador ou, onde ele não existe (iPhone), a mesma biblioteca do sistema de contagem de estoque (`barcode-detector@3.2.3`, baseada no ZXing). A câmera desliga ao fechar a lupa ou trocar de aba. No computador, digite o código ou use um leitor de código de barras USB/Bluetooth, que funciona como teclado e termina com Enter.
+
+**De onde vêm os dados.** O site chama a API do Apps Script (`?acao=produto&q=...`, função `buscarProduto` em `src/Code.gs`), que consulta a busca do site `tf.com.br` (para EAN confere o código exato e, se precisar, usa o catálogo), resume o resultado e guarda cada consulta em cache por 10 minutos. O navegador não chama o site da TF direto porque ele bloqueia (CORS). Preço e disponibilidade são os da loja online.
+
+**Por que o site saiu do Apps Script.** O Apps Script abre a página dentro de um iframe do Google sem permissão de câmera, então só dava para ler o código de uma foto. No GitHub Pages o leitor funciona ao vivo; o Apps Script ficou como servidor de dados.
+
+**Autorização.** A consulta usa a permissão do Google "conectar a um serviço externo" (`UrlFetchApp`), já autorizada. Se um dia ela for revogada, a conta dona do script autoriza de novo: abra o [projeto no Apps Script](https://script.google.com/d/1g-Re2_3aVLnRRAj_56KY8RO1RIAdNUp-9NhAM2XxMt5NHkWEf-Kkn_2c/edit), escolha a função `autorizarConsulta`, clique em **Executar** e aceite.
 
 ## Desenvolvimento
 
 1. `npm install`
-2. Para ver a página sem publicar, abra `src/Index.html` no navegador. Fora do Apps Script ela usa os 8 links de exemplo que estão no próprio arquivo, e a consulta de produtos responde com dois produtos de exemplo (`AMOSTRA_CONSULTA`).
+2. Para ver o site sem publicar: `sh scripts/montar-site.sh && python3 -m http.server -d _site 8080` e abra <http://localhost:8080>. Ele usa os links e a consulta de verdade, pela API do Apps Script. A câmera precisa de `localhost` ou HTTPS.
 3. Faça a mudança, atualize a documentação (veja abaixo) e faça o commit na `main`.
 
-Navegação da página: setas na tela, teclado (← →, Home, End, 1 a 9, Enter abre o link atual, `/` abre a consulta de produtos), roda do mouse, arrastar com o mouse ou deslizar o dedo, e a barra com todos os links. Entre produtos vizinhos na vitrine a câmera faz o travelling em vídeo; em saltos maiores, ou com "reduzir movimento" ligado no aparelho, a imagem troca com um fade.
+Navegação: setas na tela, teclado (← →, Home, End, 1 a 9, Enter abre o link atual, `/` abre a lupa), roda do mouse, arrastar com o mouse ou deslizar o dedo, e a barra com todos os links. Entre produtos vizinhos na vitrine a câmera faz o travelling em vídeo; em saltos maiores, ou com "reduzir movimento" ligado no aparelho, a imagem troca com um fade.
+
+Os links da planilha ficam guardados no aparelho: a vitrine abre na hora com a última lista e se atualiza quando a resposta do servidor chega.
 
 ## Publicação
 
 O código publicado é sempre o que está na `main`.
 
-**Automática.** Cada push na `main` que muda `src/` roda o workflow **Publicar no Apps Script**: ele envia os arquivos com o clasp e atualiza a implantação do app da Web. A URL da equipe não muda. Também dá para rodar o workflow à mão na aba **Actions**.
+**Automática.** São dois workflows, cada um com sua parte:
+
+| Workflow | Quando roda | O que faz |
+|---|---|---|
+| **Publicar site no GitHub Pages** | push na `main` que muda `web/`, `midia/` ou `scripts/montar-site.sh` | Monta `_site/` e publica o site em <https://lucasfranco-dev.github.io/hub-trackfield/>. |
+| **Publicar no Apps Script** | push na `main` que muda `src/` | Envia o servidor de dados com o clasp e atualiza a implantação (a URL da API não muda). |
+
+Os dois também rodam à mão na aba **Actions**.
 
 **Manual**, de um computador com as credenciais do clasp:
 
@@ -97,7 +126,8 @@ O script envia `src/` com `clasp push` e atualiza a implantação cujo ID está 
 
 1. Ative a **API do Google Apps Script** em <https://script.google.com/home/usersettings>.
 2. **Autorize o script:** abra a URL do Hub logado com a conta dona do script e aceite as permissões. Sem isso, quem não tem login vê "acesso negado".
-3. **Credenciais para o GitHub Actions:** no seu computador, rode `npx @google/clasp login` e autorize com a conta dona do script. Isso cria o arquivo `~/.clasprc.json`. No GitHub, em **Settings → Secrets and variables → Actions → New repository secret**, crie `CLASPRC_JSON` com o conteúdo inteiro desse arquivo.
+3. **GitHub Pages:** em **Settings → Pages → Build and deployment → Source**, escolha **GitHub Actions**.
+4. **Credenciais para o GitHub Actions:** no seu computador, rode `npx @google/clasp login` e autorize com a conta dona do script. Isso cria o arquivo `~/.clasprc.json`. No GitHub, em **Settings → Secrets and variables → Actions → New repository secret**, crie `CLASPRC_JSON` com o conteúdo inteiro desse arquivo.
 
 Sem o segredo, o workflow termina com um aviso e não publica. O `~/.clasprc.json` dá acesso aos seus scripts do Google: ele nunca entra no repositório (está no `.gitignore`) e não deve ser colado em conversas ou issues.
 
@@ -188,11 +218,7 @@ Não rode o mesmo render em dois computadores ao mesmo tempo: combine antes qual
 
 ### Mídias da página
 
-A página carrega as imagens e os vídeos de `midia/` pelo jsDelivr, a partir de um commit fixo do repositório (por isso o repositório é público): `https://cdn.jsdelivr.net/gh/lucasfranco-dev/hub-trackfield@<hash do commit>/midia/`. O conteúdo de um commit nunca muda, então o cache da CDN não atrapalha. Para trocar as mídias:
-
-1. Gere os arquivos novos em `midia/`, faça o commit e o push.
-2. Copie o hash completo desse commit (`git rev-parse HEAD`).
-3. Troque o hash na constante `MIDIA` de `src/Index.html`, faça o commit e publique.
+O site publica a pasta `midia/` junto com as páginas, e a vitrine lê os arquivos dela (`MIDIA = 'midia/'` em `web/vitrine.js`). Para trocar as mídias, gere os arquivos novos em `midia/`, faça o commit e o push: o workflow do site publica sozinho. O GitHub Pages guarda os arquivos em cache por até 10 minutos.
 
 | Arquivo | Uso |
 |---|---|
