@@ -24,7 +24,15 @@ const COLUNAS = {
   produto: 'produto',
 };
 
-function doGet() {
+/**
+ * Com ?acao=..., responde em JSON para o site do Hub no GitHub Pages:
+ *   ?acao=links              -> { links: [...] }
+ *   ?acao=produto&q=<busca>  -> { consulta, produtos: [...] }  (EAN, código TF ou nome)
+ * Erros voltam como { erro: "mensagem" }. Sem acao, entrega a página do Hub.
+ */
+function doGet(e) {
+  const acao = e && e.parameter && e.parameter.acao;
+  if (acao) return responderJson_(acao, e.parameter);
   let dados;
   try {
     dados = { links: lerLinks_() };
@@ -38,6 +46,18 @@ function doGet() {
     .evaluate()
     .setTitle('Hub Track&Field')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
+}
+
+function responderJson_(acao, parametros) {
+  let resposta;
+  try {
+    if (acao === 'links') resposta = { links: lerLinks_() };
+    else if (acao === 'produto') resposta = buscarProduto(parametros.q);
+    else throw new Error('Ação desconhecida: ' + acao);
+  } catch (erro) {
+    resposta = { erro: erro.message };
+  }
+  return ContentService.createTextOutput(JSON.stringify(resposta)).setMimeType(ContentService.MimeType.JSON);
 }
 
 /** Só dispara se o script estiver vinculado à planilha: limpa o cache na hora. */

@@ -15,7 +15,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 
 | Caminho | O que é |
 |---|---|
-| `src/Code.gs` | Servidor: lê a aba **Links** da planilha, entrega a página e faz a consulta de produtos no site da TF. |
+| `src/Code.gs` | Servidor: lê a aba **Links** da planilha, entrega a página, faz a consulta de produtos no site da TF e responde em JSON com `?acao=links` ou `?acao=produto&q=...`. |
 | `src/Index.html` | A vitrine (visual, animações e navegação) e a consulta de produtos da lupa, num único arquivo. |
 | `src/appsscript.json` | Manifesto do Apps Script: fuso horário e acesso do app da Web (qualquer pessoa, sem login). |
 | `package.json` | Dependência do clasp e, em `config.deploymentId`, o ID da implantação do app da Web. |
