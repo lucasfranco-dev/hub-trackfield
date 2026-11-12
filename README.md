@@ -1,6 +1,6 @@
 # Hub da equipe Track&Field
 
-Página de links da equipe com o tema da vitrine da loja. A câmera passa pela vitrine e cada manequim ou cubo leva a um site. A lupa consulta e soma produtos com leitor de código de barras ao vivo. O site fica no GitHub Pages, sem login; os links vêm de uma Planilha Google, lida por um Apps Script que também consulta o site da TF.
+Página de links da equipe com o tema da vitrine da loja. A câmera passa pela vitrine e cada manequim ou cubo leva a um site. A lupa consulta e soma produtos com leitor de código de barras ao vivo e guarda vendas anotadas para lançar depois. O site fica no GitHub Pages, sem login; os links vêm de uma Planilha Google, lida por um Apps Script que também consulta o site da TF.
 
 | | |
 |---|---|
@@ -18,7 +18,7 @@ Página de links da equipe com o tema da vitrine da loja. A câmera passa pela v
 |---|---|
 | `web/index.html` | O site do Hub: fachada, vitrine e a lupa. |
 | `web/estilo.css`, `web/vitrine.js` | Visual e navegação da vitrine (renders, travelling, links da planilha). |
-| `web/lupa.css`, `web/lupa.js` | A lupa: consulta e soma de produtos com leitor de código de barras ao vivo. |
+| `web/lupa.css`, `web/lupa.js` | A lupa: consulta, soma de produtos, vendas anotadas (pendentes) e leitor de código de barras ao vivo. |
 | `web/hub.js` | Endereço do servidor de dados (Apps Script) e a função que fala com ele. |
 | `scripts/montar-site.sh` | Junta `web/` e `midia/` em `_site/`, o que vai para o GitHub Pages. |
 | `.github/workflows/publicar-site.yml` | Publica o site no GitHub Pages a cada mudança em `web/` ou `midia/` na `main`. |
@@ -59,9 +59,9 @@ Os links ficam na planilha, não no código. A mudança aparece no Hub em até 1
 | URL | Endereço completo, começando com `https://`. Outros formatos são ignorados. |
 | Produto | Produto da vitrine 3D que representa o link (lista na própria coluna). Se ficar vazio ou não for um dos 8, o link usa a parada da mesma posição. |
 
-## Lupa: consulta e soma de produtos
+## Lupa: consulta, soma e vendas pendentes
 
-A lupa no canto da fachada (ou a tecla `/`) abre um painel com dois modos, que se alternam pelas abas no topo. O modo escolhido fica guardado no aparelho.
+A lupa no canto da fachada (ou a tecla `/`) abre um painel com três abas: **Consulta**, **Soma** e **Pendentes**. A última aba usada entre Consulta e Soma fica guardada no aparelho. No celular, trocar de aba não abre o teclado (o campo só recebe o foco sozinho no computador, para digitar ou usar o leitor USB).
 
 **Consulta.** Busca por:
 
@@ -83,7 +83,18 @@ Cada resultado mostra a foto, o nome, o código TF, o número e o nome da cor (e
 - **Limpar soma** pede um segundo toque para confirmar;
 - a soma fica guardada no aparelho (recarregar a página não perde) e a aba Soma mostra quantos itens tem.
 
-**Leitor ao vivo.** "Ler código de barras" liga a câmera traseira e lê uns 8 quadros por segundo, com bipe e vibração a cada leitura. O mesmo código só conta de novo depois de sair da câmera por 1,2 s, para a etiqueta parada na frente não somar várias vezes. Usa o `BarcodeDetector` do navegador ou, onde ele não existe (iPhone), a mesma biblioteca do sistema de contagem de estoque (`barcode-detector@3.2.3`, baseada no ZXing). A câmera desliga ao fechar a lupa ou trocar de aba. No computador, digite o código ou use um leitor de código de barras USB/Bluetooth, que funciona como teclado e termina com Enter.
+**Anotar venda.** Com produtos na soma, o botão **Anotar venda** abre um formulário para o vendedor guardar a venda e lançar depois no computador da loja:
+
+- mostra os itens com quantidade, código TF, número e nome da cor e tamanho; item que entrou pela busca por nome ou TF pede o tamanho;
+- cliente **já tem cadastro**: só o CPF; **cliente novo**: CPF, nome completo, telefone com DDD, CEP, número e complemento (opcional);
+- confere o CPF (dígitos verificadores), o telefone (10 ou 11 números) e o CEP (8 números) antes de salvar;
+- ao salvar, a soma é zerada e a venda vai para a aba Pendentes.
+
+**Pendentes.** Lista as vendas anotadas neste aparelho, da mais recente para a mais antiga, com data e hora, total, dados do cliente e itens. Depois de lançar no sistema, **Marcar como lançada** tira a venda da lista (com **Desfazer** logo em seguida) e apaga os dados dela do aparelho. A aba mostra quantas vendas estão pendentes.
+
+As vendas anotadas ficam só no aparelho em que foram feitas (`localStorage`): os dados do cliente não vão para o servidor nem para a planilha, e não aparecem em outro celular ou no computador. Limpar os dados do navegador apaga as pendentes.
+
+**Leitor ao vivo.** "Ler código de barras" liga a câmera traseira e lê uns 8 quadros por segundo. O bipe e a vibração saem no instante em que o código é lido, antes da busca do produto; se o produto não for encontrado, toca um som grave de erro. O mesmo código só conta de novo depois de sair da câmera por 1,2 s, para a etiqueta parada na frente não somar várias vezes. Usa o `BarcodeDetector` do navegador ou, onde ele não existe (iPhone), a mesma biblioteca do sistema de contagem de estoque (`barcode-detector@3.2.3`, baseada no ZXing). A câmera continua ligada entre Consulta e Soma e desliga ao fechar a lupa, ao abrir Pendentes ou ao anotar uma venda. No computador, digite o código ou use um leitor de código de barras USB/Bluetooth, que funciona como teclado e termina com Enter.
 
 **De onde vêm os dados.** O site chama a API do Apps Script (`?acao=produto&q=...`, função `buscarProduto` em `src/Code.gs`), que consulta a busca do site `tf.com.br` (para EAN confere o código exato e, se precisar, usa o catálogo), resume o resultado e guarda cada consulta em cache por 10 minutos. O navegador não chama o site da TF direto porque ele bloqueia (CORS). Preço e disponibilidade são os da loja online.
 

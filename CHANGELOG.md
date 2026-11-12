@@ -5,6 +5,8 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 ## [Não publicado]
 
 ### Adicionado
+- Anotar venda: na aba Soma, o botão "Anotar venda" guarda os itens (quantidade, código TF, cor e tamanho) com os dados do cliente (só CPF se já tem cadastro; CPF, nome completo, telefone com DDD, CEP, número e complemento se é novo), com conferência de CPF, telefone e CEP.
+- Aba Pendentes na lupa: lista as vendas anotadas para lançar; "Marcar como lançada" tira da lista (com desfazer) e apaga os dados do aparelho. As vendas ficam só no aparelho, sem ir para o servidor.
 - O endereço antigo do Hub (Apps Script) agora mostra "O Hub mudou de endereço" com o botão para o site novo.
 - Site do Hub no GitHub Pages (`web/`, publicado pelo workflow `publicar-site.yml` junto com `midia/`): mesma vitrine, sem a faixa do Google, carregando mais rápido e com a câmera liberada. Os links vêm da API do Apps Script e ficam guardados no aparelho para a vitrine abrir na hora.
 - Lupa com dois modos. Consulta: como antes. Soma: cada código bipado ou digitado entra numa lista com o total, quantidade (− e +), remover com desfazer, limpar com confirmação, economia quando há promoção e a soma guardada no aparelho.
@@ -18,6 +20,8 @@ Todas as mudanças relevantes do Hub ficam registradas aqui, da mais recente par
 - `docs/render-no-pc.md`: o que instalar no PC e o pedido pronto para o Claude local renderizar e publicar.
 
 ### Alterado
+- Trocar de aba na lupa não abre mais o teclado no celular: o campo só recebe o foco sozinho no computador.
+- O bipe do leitor toca no instante em que o código é lido, sem esperar a busca do produto; produto não encontrado toca o som de erro.
 - Mídias da vitrine publicadas junto com o site (`midia/`), sem o jsDelivr nem o hash fixo em `MIDIA`.
 - `docs/render-no-pc.md`: depois do render basta commit e push; o site publica as mídias sozinho.
 - Os scripts de render acham o Python do venv também no Windows (`3d/ambiente.sh`) e aceitam tamanho, amostras e desfoque por variáveis (`LARGURA`, `ALTURA`, `AMOSTRAS`, `DESFOQUE`).

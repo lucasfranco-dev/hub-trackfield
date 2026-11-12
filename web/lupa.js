@@ -1,9 +1,12 @@
-// Lupa do Hub: consulta de produtos e soma de produtos, com leitor de código de barras ao vivo.
+// Lupa do Hub: consulta de produtos, soma de produtos e vendas anotadas para lançar depois,
+// com leitor de código de barras ao vivo.
 //
 // Consulta: busca por EAN, código TF (com ou sem a cor) ou parte do nome e mostra foto, nome,
 // código, cor e preços. Soma: cada código bipado entra numa lista e o total soma sozinho; dá
-// para mudar a quantidade, remover (com desfazer) e limpar. A soma fica guardada no aparelho.
-// Os dados vêm do site tf.com.br pela API do Hub (buscarProduto, em src/Code.gs).
+// para mudar a quantidade, remover (com desfazer) e limpar. "Anotar venda" guarda os itens da
+// soma com os dados do cliente; a venda fica em Pendentes até ser marcada como lançada.
+// A soma e as vendas ficam só neste aparelho (localStorage): nada do cliente vai para o servidor.
+// Os produtos vêm do site tf.com.br pela API do Hub (buscarProduto, em src/Code.gs).
 (function () {
   'use strict';
 
@@ -16,6 +19,9 @@
   var IMAGENS = 'https://trackfield.vtexassets.com/';
   var CHAVE_SOMA = 'hub-soma-v1';
   var CHAVE_MODO = 'hub-lupa-modo';
+  var CHAVE_VENDAS = 'hub-vendas-v1';
+  // Em celular e tablet, focar o campo abre o teclado e atrapalha quem só quer bipar.
+  var TOQUE = window.matchMedia('(hover: none), (pointer: coarse)').matches;
   var EAN = /^\d{8,14}$/;
 
   var $ = function (id) { return document.getElementById(id); };
@@ -27,6 +33,11 @@
   var painelSoma = $('painelSoma'), somaBusca = $('somaBusca'), somaItens = $('somaItens'), somaVazia = $('somaVazia');
   var somaTotal = $('somaTotal'), somaResumo = $('somaResumo'), somaEconomia = $('somaEconomia'), somaValor = $('somaValor');
   var limpar = $('limparSoma');
+  var abaPendentes = $('modoPendentes'), contagemPendentes = $('pendentesQtd');
+  var painelPendentes = $('painelPendentes'), listaPendentes = $('listaPendentes'), pendentesVazia = $('pendentesVazia');
+  var painelVenda = $('painelVenda'), vendaItens = $('vendaItens'), vendaTotal = $('vendaTotal'), camposNovo = $('camposNovo');
+  var ABAS = { consulta: abaConsulta, soma: abaSoma, pendentes: abaPendentes };
+  var dataHora = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   var reais = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
   var modo = 'consulta';
@@ -34,6 +45,9 @@
   var soma = lerSoma();
   var buscandoEan = {};
   var removido = null;  // último item removido, para desfazer
+  var vendas = lerLista(CHAVE_VENDAS);
+  var anotando = false;  // formulário "Anotar venda" aberto por cima da soma
+  var lancada = null;    // última venda marcada como lançada, para desfazer
   var leitor = { ativo: false, abrindo: false, stream: null, detector: null, ultimo: '', visto: 0, audio: null };
 
   // ------------------------------------------------------------ utilidades
@@ -123,22 +137,37 @@
     campo.select();
   }
 
-  function definirModo(novo, focar) {
+  function focarCampo() { if (!TOQUE) campo.focus(); }
+
+  // Troca de aba. Não foca o campo em aparelhos de toque (abriria o teclado).
+  function definirModo(novo) {
     modo = novo;
-    try { localStorage.setItem(CHAVE_MODO, modo); } catch (e) { /* sem armazenamento */ }
-    var soma_ = modo === 'soma';
-    abaConsulta.setAttribute('aria-selected', String(!soma_));
-    abaSoma.setAttribute('aria-selected', String(soma_));
-    abaConsulta.tabIndex = soma_ ? -1 : 0;
-    abaSoma.tabIndex = soma_ ? 0 : -1;
-    painelConsulta.hidden = soma_;
-    painelSoma.hidden = !soma_;
-    dialogo.classList.toggle('modo-soma', soma_);
-    enviar.textContent = soma_ ? 'Adicionar' : 'Buscar';
-    campo.placeholder = soma_ ? 'Bipe ou digite o código' : 'EAN, código TF ou nome do produto';
+    anotando = false;
+    if (modo !== 'pendentes') {
+      try { localStorage.setItem(CHAVE_MODO, modo); } catch (e) { /* sem armazenamento */ }
+    }
+    enviar.textContent = modo === 'soma' ? 'Adicionar' : 'Buscar';
+    campo.placeholder = modo === 'soma' ? 'Bipe ou digite o código' : 'EAN, código TF ou nome do produto';
     avisar('');
+    mostrarVista();
+  }
+
+  // Mostra o painel da aba atual, ou o formulário de venda por cima da soma.
+  function mostrarVista() {
+    Object.keys(ABAS).forEach(function (m) {
+      ABAS[m].setAttribute('aria-selected', String(m === modo));
+      ABAS[m].tabIndex = m === modo ? 0 : -1;
+    });
+    painelConsulta.hidden = modo !== 'consulta';
+    painelSoma.hidden = modo !== 'soma' || anotando;
+    painelVenda.hidden = !(modo === 'soma' && anotando);
+    painelPendentes.hidden = modo !== 'pendentes';
+    // Pendentes e o formulário de venda não usam a busca nem a câmera.
+    var semBusca = modo === 'pendentes' || anotando;
+    dialogo.classList.toggle('sem-busca', semBusca);
+    if (semBusca) desligarCamera();
     desenharSoma();
-    if (focar) (focar === 'aba' ? (soma_ ? abaSoma : abaConsulta) : campo).focus();
+    desenharPendentes();
   }
 
   // ------------------------------------------------------------ consulta
@@ -195,7 +224,7 @@
         somarProduto(p);
         somaBusca.textContent = '';
         campo.value = '';
-        campo.focus();
+        focarCampo();
       });
       acoes.appendChild(b);
     }
@@ -227,12 +256,14 @@
 
   // ------------------------------------------------------------ soma
 
-  function lerSoma() {
+  function lerLista(chave) {
     try {
-      var s = JSON.parse(localStorage.getItem(CHAVE_SOMA));
+      var s = JSON.parse(localStorage.getItem(chave));
       return Array.isArray(s) ? s : [];
     } catch (e) { return []; }
   }
+
+  function lerSoma() { return lerLista(CHAVE_SOMA); }
 
   function guardarSoma() {
     try { localStorage.setItem(CHAVE_SOMA, JSON.stringify(soma)); } catch (e) { /* sem armazenamento */ }
@@ -263,8 +294,9 @@
 
   // Código bipado ou digitado no modo soma. O mesmo EAN de novo só aumenta a quantidade.
   function somarEan(ean, origem) {
+    // O bipe da câmera toca em receberCodigo, na hora da leitura; aqui só o som de erro.
     var jaTem = soma.filter(function (i) { return i.chave === 'ean:' + ean; })[0];
-    if (jaTem) { sinal('ok'); return somarProduto(jaTem, origem); }
+    if (jaTem) return somarProduto(jaTem, origem);
     if (buscandoEan[ean]) return;
     buscandoEan[ean] = true;
     avisar('Buscando ' + ean + ' no site da Track&Field…');
@@ -277,7 +309,6 @@
         if (origem === 'camera') mostrarLeitura('Código ' + ean + ' não encontrado', 'erro');
         return;
       }
-      sinal('ok');
       somarProduto(p, origem);
     }, function (e) {
       sinal('erro');
@@ -327,7 +358,7 @@
     guardarSoma();
     desenharSoma();
     avisar('Soma limpa.');
-    campo.focus();
+    focarCampo();
   }
 
   function desenharSoma(destaque) {
@@ -336,7 +367,7 @@
     contagemAba.hidden = !unidades;
     somaItens.textContent = '';
     somaVazia.hidden = soma.length > 0;
-    somaTotal.hidden = modo !== 'soma' || !soma.length;
+    somaTotal.hidden = modo !== 'soma' || anotando || !soma.length;
     soma.forEach(function (item) { somaItens.appendChild(linhaSoma(item, item.chave === destaque)); });
 
     var total = soma.reduce(function (t, i) { return t + i.preco * i.qtd; }, 0);
@@ -397,6 +428,227 @@
     }
     li.appendChild(lado);
     return li;
+  }
+
+  // ------------------------------------------------------------ anotar venda
+  // O vendedor anota a venda no celular para lançar depois no computador da loja. Os dados do
+  // cliente ficam só neste aparelho e são apagados quando a venda é marcada como lançada.
+
+  function digitos(v) { return String(v || '').replace(/\D/g, ''); }
+
+  function formatarCpf(v) {
+    var d = digitos(v).slice(0, 11);
+    return d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3}\.\d{3})(\d)/, '$1.$2').replace(/^(\d{3}\.\d{3}\.\d{3})(\d)/, '$1-$2');
+  }
+
+  function formatarTelefone(v) {
+    var d = digitos(v).slice(0, 11);
+    if (d.length <= 2) return d.length ? '(' + d : '';
+    var meio = d.length > 10 ? 7 : 6;
+    return '(' + d.slice(0, 2) + ') ' + d.slice(2, meio) + (d.length > meio ? '-' + d.slice(meio) : '');
+  }
+
+  function formatarCep(v) {
+    var d = digitos(v).slice(0, 8);
+    return d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+  }
+
+  // Confere os dois dígitos verificadores do CPF, para pegar erro de digitação na hora.
+  function cpfValido(v) {
+    var d = digitos(v);
+    if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+    for (var t = 9; t < 11; t++) {
+      var soma_ = 0;
+      for (var k = 0; k < t; k++) soma_ += Number(d[k]) * (t + 1 - k);
+      if (Number(d[t]) !== (soma_ * 10) % 11 % 10) return false;
+    }
+    return true;
+  }
+
+  var CAMPOS = {
+    vendaCpf: { formatar: formatarCpf, validar: function (v) { return cpfValido(v) ? '' : 'CPF inválido. Confira os números.'; } },
+    vendaNome: { novo: true, validar: function (v) { return /\S+\s+\S+/.test(v.trim()) ? '' : 'Digite o nome completo (nome e sobrenome).'; } },
+    vendaTelefone: { novo: true, formatar: formatarTelefone, validar: function (v) { var n = digitos(v).length; return n === 10 || n === 11 ? '' : 'Digite o telefone com DDD (10 ou 11 números).'; } },
+    vendaCep: { novo: true, formatar: formatarCep, validar: function (v) { return digitos(v).length === 8 ? '' : 'O CEP tem 8 números.'; } },
+    vendaNumero: { novo: true, validar: function (v) { return v.trim() ? '' : 'Digite o número (ou S/N).'; } },
+    vendaComplemento: { novo: true, validar: function () { return ''; } }
+  };
+
+  function clienteNovo() { return painelVenda.elements.cadastro.value === 'nao'; }
+
+  function erroDoCampo(id, mensagem) {
+    var input = $(id), erro = $(id + 'Erro');
+    if (erro) erro.textContent = mensagem;
+    input.setAttribute('aria-invalid', String(!!mensagem));
+    return !mensagem;
+  }
+
+  function abrirAnotacao() {
+    if (!soma.length) return;
+    anotando = true;
+    avisar('');
+    vendaItens.textContent = '';
+    soma.forEach(function (item) { vendaItens.appendChild(linhaVenda(item, true)); });
+    var total = soma.reduce(function (t, i) { return t + i.preco * i.qtd; }, 0);
+    var unidades = soma.reduce(function (t, i) { return t + i.qtd; }, 0);
+    vendaTotal.textContent = (unidades === 1 ? '1 item' : unidades + ' itens') + ' · ' + reais.format(total);
+    camposNovo.hidden = !clienteNovo();
+    mostrarVista();
+    painelVenda.scrollTop = 0;
+    if (!TOQUE) $('vendaCpf').focus();
+  }
+
+  // Linha de item da venda: "2× Nome" e "TF · Cor · Tam.". No formulário (editavel), o item
+  // que entrou pela busca por nome ou TF não tem tamanho, então o vendedor informa.
+  function linhaVenda(item, editavel) {
+    var li = el('li', 'venda-item');
+    li.appendChild(el('span', 'venda-qtd', item.qtd + '×'));
+    var corpo = el('div');
+    corpo.appendChild(el('p', 'item-nome', item.nome));
+    var ficha = el('p', 'ficha', (item.modelo || item.referencia) + ' · ' + textoCor(item) + (item.tamanho ? ' · Tam.\u00a0' + textoTamanho(item.tamanho) : ''));
+    corpo.appendChild(ficha);
+    if (editavel && !item.tamanho) {
+      var rotulo = el('label', 'campo-tamanho', 'Tamanho ');
+      var input = el('input');
+      input.type = 'text';
+      input.maxLength = 6;
+      input.autocapitalize = 'characters';
+      input.autocomplete = 'off';
+      input.placeholder = 'Ex.: M';
+      input.value = item.tamanhoDigitado || '';
+      input.setAttribute('data-tamanho', item.chave);
+      input.addEventListener('input', function () {
+        item.tamanhoDigitado = input.value.trim().toUpperCase();
+        input.setAttribute('aria-invalid', 'false');
+        guardarSoma();
+      });
+      rotulo.appendChild(input);
+      corpo.appendChild(rotulo);
+    }
+    li.appendChild(corpo);
+    li.appendChild(el('span', 'venda-preco', reais.format(item.preco * item.qtd)));
+    return li;
+  }
+
+  function salvarVenda() {
+    var novo = clienteNovo();
+    var primeiroErro = null;
+    Object.keys(CAMPOS).forEach(function (id) {
+      var regra = CAMPOS[id];
+      var ok = regra.novo && !novo ? erroDoCampo(id, '') : erroDoCampo(id, regra.validar($(id).value));
+      if (!ok && !primeiroErro) primeiroErro = $(id);
+    });
+    Array.prototype.forEach.call(vendaItens.querySelectorAll('[data-tamanho]'), function (input) {
+      var falta = !input.value.trim();
+      input.setAttribute('aria-invalid', String(falta));
+      if (falta && !primeiroErro) primeiroErro = input;
+    });
+    if (primeiroErro) {
+      avisar('Confira os campos marcados antes de salvar.', true);
+      primeiroErro.focus();
+      return;
+    }
+
+    var cliente = { cadastro: !novo, cpf: formatarCpf($('vendaCpf').value) };
+    if (novo) {
+      cliente.nome = $('vendaNome').value.replace(/\s+/g, ' ').trim();
+      cliente.telefone = formatarTelefone($('vendaTelefone').value);
+      cliente.cep = formatarCep($('vendaCep').value);
+      cliente.numero = $('vendaNumero').value.trim();
+      cliente.complemento = $('vendaComplemento').value.trim();
+    }
+    vendas.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      criada: new Date().toISOString(),
+      cliente: cliente,
+      itens: soma.map(function (i) {
+        return {
+          qtd: i.qtd, nome: i.nome, modelo: i.modelo, referencia: i.referencia, corCodigo: i.corCodigo, corNome: i.corNome,
+          tamanho: i.tamanho || i.tamanhoDigitado, ean: i.tamanho ? i.ean : '', preco: i.preco, precoCheio: i.precoCheio
+        };
+      }),
+      total: soma.reduce(function (t, i) { return t + i.preco * i.qtd; }, 0)
+    });
+    var guardou = guardarVendas();
+    soma = [];
+    removido = null;
+    guardarSoma();
+    painelVenda.reset();
+    Object.keys(CAMPOS).forEach(function (id) { erroDoCampo(id, ''); });
+    definirModo('pendentes');
+    avisar(guardou ? 'Venda anotada. Ela fica aqui até você marcar como lançada.'
+      : 'Venda anotada, mas este navegador não está guardando dados (aba anônima?): ela some se a página fechar.', !guardou);
+  }
+
+  function guardarVendas() {
+    try { localStorage.setItem(CHAVE_VENDAS, JSON.stringify(vendas)); return true; } catch (e) { return false; }
+  }
+
+  // ------------------------------------------------------------ vendas pendentes
+
+  function desenharPendentes() {
+    contagemPendentes.textContent = vendas.length;
+    contagemPendentes.hidden = !vendas.length;
+    if (modo !== 'pendentes') return;
+    listaPendentes.textContent = '';
+    pendentesVazia.hidden = vendas.length > 0;
+    vendas.forEach(function (venda) { listaPendentes.appendChild(cartaoVenda(venda)); });
+  }
+
+  function linhaDado(dl, rotulo, valor) {
+    if (!valor) return;
+    dl.appendChild(el('dt', null, rotulo));
+    dl.appendChild(el('dd', null, valor));
+  }
+
+  function cartaoVenda(venda) {
+    var li = el('li', 'venda-pendente');
+    var topo = el('div', 'venda-topo');
+    var quando = el('time', null, dataHora.format(new Date(venda.criada)).replace(',', ' às'));
+    quando.dateTime = venda.criada;
+    topo.appendChild(quando);
+    topo.appendChild(el('strong', null, reais.format(venda.total)));
+    li.appendChild(topo);
+
+    var c = venda.cliente;
+    li.appendChild(el('p', 'venda-cliente', c.cadastro ? 'Cliente com cadastro' : 'Cliente novo: cadastrar'));
+    var dl = el('dl', 'venda-dados');
+    linhaDado(dl, 'CPF', c.cpf);
+    linhaDado(dl, 'Nome', c.nome);
+    linhaDado(dl, 'Telefone', c.telefone);
+    linhaDado(dl, 'CEP', c.cep);
+    linhaDado(dl, 'Número', c.numero);
+    linhaDado(dl, 'Complemento', c.complemento);
+    li.appendChild(dl);
+
+    var itens = el('ul', 'venda-itens');
+    venda.itens.forEach(function (item) { itens.appendChild(linhaVenda(item, false)); });
+    li.appendChild(itens);
+
+    var b = el('button', 'botao pequeno primario', 'Marcar como lançada');
+    b.type = 'button';
+    b.addEventListener('click', function () { marcarLancada(venda); });
+    li.appendChild(b);
+    return li;
+  }
+
+  function marcarLancada(venda) {
+    var posicao = vendas.indexOf(venda);
+    if (posicao < 0) return;
+    vendas.splice(posicao, 1);
+    lancada = { venda: venda, posicao: posicao };
+    guardarVendas();
+    desenharPendentes();
+    avisar('Venda marcada como lançada e apagada deste aparelho.', false, { rotulo: 'Desfazer', fazer: desfazerLancada });
+  }
+
+  function desfazerLancada() {
+    if (!lancada) return;
+    vendas.splice(Math.min(lancada.posicao, vendas.length), 0, lancada.venda);
+    lancada = null;
+    guardarVendas();
+    desenharPendentes();
+    avisar('Venda de volta nas pendentes.');
   }
 
   // ------------------------------------------------------------ leitor ao vivo
@@ -492,11 +744,16 @@
     receberCodigo(codigo, 'camera');
   }
 
+  // O bipe toca aqui, no instante em que o código é lido; se depois o produto não for
+  // encontrado, toca o som de erro.
   function receberCodigo(codigo, origem) {
     if (modo === 'soma') {
-      if (EAN.test(codigo)) return somarEan(codigo, origem);
-      sinal('erro');
-      return avisar('Esse código (' + codigo + ') não é um EAN de produto.', true);
+      if (!EAN.test(codigo)) {
+        sinal('erro');
+        return avisar('Esse código (' + codigo + ') não é um EAN de produto.', true);
+      }
+      sinal('ok');
+      return somarEan(codigo, origem);
     }
     sinal('ok');
     campo.value = codigo;
@@ -519,14 +776,34 @@
   dialogo.addEventListener('click', function (e) { if (e.target === dialogo) dialogo.close(); });
   dialogo.addEventListener('close', desligarCamera);
   document.addEventListener('visibilitychange', function () { if (document.hidden) desligarCamera(); });
-  abaConsulta.addEventListener('click', function () { definirModo('consulta', true); });
-  abaSoma.addEventListener('click', function () { definirModo('soma', true); });
-  [abaConsulta, abaSoma].forEach(function (aba) {
-    aba.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        definirModo(modo === 'soma' ? 'consulta' : 'soma', 'aba');
-      }
+  var ORDEM = ['consulta', 'soma', 'pendentes'];
+  ORDEM.forEach(function (m) {
+    ABAS[m].addEventListener('click', function () {
+      definirModo(m);
+      // No computador o campo já fica pronto para digitar ou para o leitor USB; no celular
+      // o foco fica na aba, para o teclado não abrir sozinho.
+      if (m !== 'pendentes') focarCampo();
+    });
+    ABAS[m].addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      var destino = ORDEM[(ORDEM.indexOf(modo) + (e.key === 'ArrowRight' ? 1 : ORDEM.length - 1)) % ORDEM.length];
+      definirModo(destino);
+      ABAS[destino].focus();
+    });
+  });
+  $('anotarVenda').addEventListener('click', abrirAnotacao);
+  $('voltarSoma').addEventListener('click', function () { anotando = false; avisar(''); mostrarVista(); });
+  painelVenda.addEventListener('submit', function (e) { e.preventDefault(); salvarVenda(); });
+  painelVenda.addEventListener('change', function (e) {
+    if (e.target.name === 'cadastro') camposNovo.hidden = !clienteNovo();
+  });
+  // Ao corrigir qualquer campo, o aviso de erro do formulário sai da tela.
+  painelVenda.addEventListener('input', function () { if (status.classList.contains('erro')) avisar(''); });
+  Object.keys(CAMPOS).forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      if (CAMPOS[id].formatar) $(id).value = CAMPOS[id].formatar($(id).value);
+      erroDoCampo(id, '');
     });
   });
   form.addEventListener('submit', function (e) {

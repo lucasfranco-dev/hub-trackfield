@@ -1,4 +1,4 @@
-/* Lupa do Hub: consulta e soma de produtos, com leitor de código de barras ao vivo. */
+/* Lupa do Hub: consulta, soma de produtos e vendas anotadas, com leitor de código de barras ao vivo. */
 
 .lupa {
   position: absolute;
@@ -60,9 +60,9 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 40px;
-  padding: 0 18px;
+  padding: 0 16px;
   border: 0;
   border-radius: 11px;
   background: transparent;
@@ -316,7 +316,90 @@
 .soma-valor { grid-row: span 2; font-size: 28px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .soma-economia { font-size: 13px; color: #1f6b3a; }
 .soma-economia:empty { display: none; }
-.soma-total .link-acao { grid-column: 1 / -1; justify-self: start; margin-top: 4px; padding-left: 0; }
+.soma-acoes { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.soma-acoes .link-acao { padding-left: 0; font-weight: 500; color: var(--noturno-suave); }
+.soma-acoes .botao { flex: 1; max-width: 260px; }
+
+/* Pendentes e o formulário de venda não usam a busca nem a câmera. */
+.sem-busca .lupa-form, .sem-busca #botaoCamera, .sem-busca .camera { display: none; }
+
+/* Anotar venda */
+.venda h2 { margin: 4px 0 6px; font-size: 20px; font-weight: 500; letter-spacing: -.01em; }
+.venda-itens { margin: 0; padding: 0; list-style: none; }
+.venda-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-top: 1px solid #e7e2da;
+}
+.venda-item:first-child { border-top: 0; }
+.venda-qtd { min-width: 26px; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.venda-preco { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.venda-item .ficha { margin-top: 2px; }
+.campo-tamanho { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; font-weight: 500; }
+.venda-total { margin: 4px 0 18px; padding-top: 10px; border-top: 1px solid #e7e2da; font-size: 16px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+.tipo-cliente { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; padding: 0; border: 0; }
+.tipo-cliente legend { margin-bottom: 8px; padding: 0; font-size: 16px; font-weight: 500; }
+.tipo-cliente label { flex: 1; min-width: 140px; cursor: pointer; }
+.tipo-cliente input { position: absolute; opacity: 0; }
+.tipo-cliente span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid #d8d2c8;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--noturno-suave);
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.tipo-cliente input:checked + span { border-color: var(--noturno); background: var(--noturno); color: #fff; }
+.tipo-cliente input:focus-visible + span { outline: 2px solid var(--noturno); outline-offset: 2px; }
+
+.campo { margin-bottom: 12px; }
+.campo label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 500; }
+.campo input, .campo-tamanho input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d8d2c8;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--noturno);
+  font: 400 17px var(--fonte);
+}
+.campo-tamanho input { width: 92px; min-height: 40px; text-transform: uppercase; }
+.campo input:focus, .campo-tamanho input:focus { outline: 2px solid var(--noturno); outline-offset: -1px; border-color: transparent; }
+.campo input[aria-invalid="true"], .campo-tamanho input[aria-invalid="true"] { border-color: #a3352b; background: #fdf6f5; }
+.erro-campo { margin: 4px 0 0; font-size: 13px; color: #a3352b; }
+.erro-campo:empty { display: none; }
+.campos-lado { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; }
+.venda-acoes { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 18px; }
+.venda-acoes .botao.secundario { margin-top: 0; }
+
+/* Vendas pendentes */
+.lista-pendentes { margin: 0; padding: 0; list-style: none; }
+.venda-pendente {
+  margin-bottom: 12px;
+  padding: 14px 16px 16px;
+  border: 1px solid #e7e2da;
+  border-radius: 16px;
+  background: #fff;
+}
+.venda-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--noturno-suave); }
+.venda-topo strong { font-size: 18px; font-weight: 600; color: var(--noturno); font-variant-numeric: tabular-nums; }
+.venda-cliente { margin: 10px 0 6px; font-size: 15px; font-weight: 600; }
+.venda-dados { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 10px; font-size: 15px; }
+.venda-dados dt { color: var(--noturno-suave); }
+.venda-dados dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.venda-pendente .venda-itens { margin-bottom: 12px; border-top: 1px solid #e7e2da; }
+.venda-pendente .botao { width: 100%; min-height: 44px; }
 
 @media (max-width: 720px) {
   /* O letreiro centraliza no espaço à direita da lupa. */
@@ -335,10 +418,14 @@
   .painel-lupa { margin: 0 -16px; padding: 0 16px calc(16px + env(safe-area-inset-bottom)); }
   .soma-total { margin: 0 -16px; padding-inline: 16px; }
   .lupa-form .botao.primario { padding: 0 16px; }
+  /* Três abas e o botão de fechar cabem em telas de 360 px. */
+  .lupa-topo { gap: 4px; }
+  .modos button { padding: 0 10px; font-size: 15px; }
+  .contagem { min-width: 20px; height: 20px; padding: 0 5px; line-height: 20px; }
 }
 @keyframes lupa-sobe { from { transform: translateY(40px); opacity: .6; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .lupa, .botao, .modos button { transition: none !important; }
+  .lupa, .botao, .modos button, .tipo-cliente span { transition: none !important; }
   .lupa-painel[open], .item-soma.novo, .mira::after { animation: none; }
 }

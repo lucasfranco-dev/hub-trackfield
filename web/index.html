@@ -20,7 +20,7 @@
     <header class="fachada">
       <h1 class="sr-only">Hub da equipe Track&amp;Field</h1>
       <p class="letreiro" aria-hidden="true">Track&amp;Field</p>
-      <button class="lupa" id="abrirConsulta" type="button" aria-label="Consultar e somar produtos" aria-haspopup="dialog" title="Consultar e somar produtos (/)">
+      <button class="lupa" id="abrirConsulta" type="button" aria-label="Consultar produtos, somar e anotar vendas" aria-haspopup="dialog" title="Consultar, somar e anotar vendas (/)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>
       </button>
     </header>
@@ -53,12 +53,13 @@
     <p class="sr-only" aria-live="polite" id="anuncio"></p>
   </div>
 
-  <dialog class="lupa-painel" id="lupaPainel" aria-label="Consultar e somar produtos">
+  <dialog class="lupa-painel" id="lupaPainel" aria-label="Consultar produtos, somar e anotar vendas">
     <div class="lupa-caixa">
       <div class="lupa-topo">
         <div class="modos" role="tablist" aria-label="Modo da lupa">
           <button role="tab" id="modoConsulta" type="button" aria-selected="true" aria-controls="painelConsulta">Consulta</button>
           <button role="tab" id="modoSoma" type="button" aria-selected="false" aria-controls="painelSoma" tabindex="-1">Soma <span class="contagem" id="somaQtd" hidden></span></button>
+          <button role="tab" id="modoPendentes" type="button" aria-selected="false" aria-controls="painelPendentes" tabindex="-1">Pendentes <span class="contagem" id="pendentesQtd" hidden></span></button>
         </div>
         <button class="fechar" id="fecharLupa" type="button" aria-label="Fechar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -92,8 +93,67 @@
         <span class="soma-resumo" id="somaResumo"></span>
         <strong class="soma-valor" id="somaValor" aria-live="polite"></strong>
         <span class="soma-economia" id="somaEconomia"></span>
-        <button class="link-acao" id="limparSoma" type="button">Limpar soma</button>
+        <div class="soma-acoes">
+          <button class="link-acao" id="limparSoma" type="button">Limpar soma</button>
+          <button class="botao primario" id="anotarVenda" type="button">Anotar venda</button>
+        </div>
       </footer>
+
+      <form class="painel-lupa venda" id="painelVenda" novalidate aria-labelledby="vendaTitulo" hidden>
+        <h2 id="vendaTitulo">Anotar venda</h2>
+        <ul class="venda-itens" id="vendaItens" aria-label="Itens da venda"></ul>
+        <p class="venda-total" id="vendaTotal"></p>
+
+        <fieldset class="tipo-cliente">
+          <legend>Cliente</legend>
+          <label><input type="radio" name="cadastro" value="sim" checked> <span>Já tem cadastro</span></label>
+          <label><input type="radio" name="cadastro" value="nao"> <span>Cliente novo</span></label>
+        </fieldset>
+
+        <div class="campo">
+          <label for="vendaCpf">CPF</label>
+          <input id="vendaCpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" aria-describedby="vendaCpfErro">
+          <p class="erro-campo" id="vendaCpfErro"></p>
+        </div>
+        <div id="camposNovo" hidden>
+          <div class="campo">
+            <label for="vendaNome">Nome completo</label>
+            <input id="vendaNome" type="text" autocomplete="off" autocapitalize="words" aria-describedby="vendaNomeErro">
+            <p class="erro-campo" id="vendaNomeErro"></p>
+          </div>
+          <div class="campo">
+            <label for="vendaTelefone">Telefone com DDD</label>
+            <input id="vendaTelefone" type="text" inputmode="numeric" autocomplete="off" placeholder="(00) 00000-0000" aria-describedby="vendaTelefoneErro">
+            <p class="erro-campo" id="vendaTelefoneErro"></p>
+          </div>
+          <div class="campos-lado">
+            <div class="campo">
+              <label for="vendaCep">CEP</label>
+              <input id="vendaCep" type="text" inputmode="numeric" autocomplete="off" placeholder="00000-000" aria-describedby="vendaCepErro">
+              <p class="erro-campo" id="vendaCepErro"></p>
+            </div>
+            <div class="campo">
+              <label for="vendaNumero">Número</label>
+              <input id="vendaNumero" type="text" autocomplete="off" aria-describedby="vendaNumeroErro">
+              <p class="erro-campo" id="vendaNumeroErro"></p>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="vendaComplemento">Complemento (se tiver)</label>
+            <input id="vendaComplemento" type="text" autocomplete="off" placeholder="Apto, bloco, casa">
+          </div>
+        </div>
+
+        <div class="venda-acoes">
+          <button class="botao secundario" id="voltarSoma" type="button">Voltar</button>
+          <button class="botao primario" type="submit">Salvar venda</button>
+        </div>
+      </form>
+
+      <div class="painel-lupa" id="painelPendentes" role="tabpanel" aria-labelledby="modoPendentes" hidden>
+        <p class="soma-vazia" id="pendentesVazia">Nenhuma venda para lançar. Na aba Soma, some os produtos e toque em "Anotar venda".</p>
+        <ul class="lista-pendentes" id="listaPendentes" aria-label="Vendas para lançar"></ul>
+      </div>
     </div>
   </dialog>
 
